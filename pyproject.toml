@@ -1,0 +1,25 @@
+[project]
+name = "expense-tracker"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Ankit choudhary", email = "ankitjat3232@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "beanie>=2.2.0",
+    "fastapi>=0.141.1",
+    "pwdlib[argon2]>=0.3.1",
+    "pydantic-settings>=2.15.0",
+    "pydantic[email]>=2.13.5",
+    "pyjwt>=2.15.0",
+    "uvicorn>=0.54.0",
+]
+
+[project.scripts]
+expense-tracker = "expense_tracker:main"
+
+[build-system]
+requires = ["uv_build>=0.12.19,<0.13.0"]
+build-backend = "uv_build"
