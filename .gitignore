@@ -1,28 +1,45 @@
-# Python-generated files
+# =========================
+# Backend - Python
+# =========================
+
 __pycache__/
 *.py[oc]
+*.egg-info/
 build/
 dist/
 wheels/
-*.egg-info/
 
 # Virtual environments
-.venv/
-venv/
+backend/.venv/
+backend/venv/
 
 # Environment variables
-.env
-.env.*
+backend/.env
+backend/.env.*
 
 # Testing / coverage
 .pytest_cache/
 .coverage
 htmlcov/
 
+# =========================
+# Frontend - Next.js
+# =========================
+
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+
+# =========================
 # IDE
+# =========================
+
 .vscode/
 .idea/
 
+# =========================
 # OS
+# =========================
+
 .DS_Store
 Thumbs.db
