@@ -1,3 +1,6 @@
+from datetime import date
+import logging
+
 from beanie import PydanticObjectId
 from fastapi import HTTPException, status
 
@@ -15,47 +18,97 @@ from expense_tracker.features.expense.service import (
 )
 
 
+logger = logging.getLogger(__name__)
+
+
 async def create_expense_controller(
     user_id: PydanticObjectId,
     data: ExpenseCreate,
 ) -> ExpenseResponse:
-    expense = await create_expense(
-        user_id=user_id,
-        data=data,
-    )
+    try:
+        expense = await create_expense(
+            user_id=user_id,
+            data=data,
+        )
 
-    return ExpenseResponse.model_validate(expense)
+        return ExpenseResponse.model_validate(expense)
+
+    except HTTPException:
+        raise
+
+    except Exception:
+        logger.exception(
+            "Error creating expense for user_id=%s",
+            user_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create expense",
+        )
 
 
 async def get_expenses_controller(
     user_id: PydanticObjectId,
+    start_date: date | None = None,
+    end_date: date | None = None,
 ) -> list[ExpenseResponse]:
-    expenses = await get_expenses(
-        user_id=user_id,
-    )
+    try:
+        expenses = await get_expenses(
+            user_id=user_id,
+            start_date=start_date,
+            end_date=end_date,
+        )
 
-    return [
-        ExpenseResponse.model_validate(expense)
-        for expense in expenses
-    ]
+        return [
+            ExpenseResponse.model_validate(expense)
+            for expense in expenses
+        ]
+
+    except HTTPException:
+        raise
+
+    except Exception:
+        logger.exception(
+            "Error fetching expenses for user_id=%s",
+            user_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch expenses",
+        )
 
 
 async def get_expense_controller(
     expense_id: PydanticObjectId,
     user_id: PydanticObjectId,
 ) -> ExpenseResponse:
-    expense = await get_expense_by_id(
-        expense_id=expense_id,
-        user_id=user_id,
-    )
-
-    if not expense:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Expense not found",
+    try:
+        expense = await get_expense_by_id(
+            expense_id=expense_id,
+            user_id=user_id,
         )
 
-    return ExpenseResponse.model_validate(expense)
+        if not expense:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Expense not found",
+            )
+
+        return ExpenseResponse.model_validate(expense)
+
+    except HTTPException:
+        raise
+
+    except Exception:
+        logger.exception(
+            "Error fetching expense_id=%s for user_id=%s",
+            expense_id,
+            user_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to fetch expense",
+        )
 
 
 async def update_expense_controller(
@@ -63,38 +116,68 @@ async def update_expense_controller(
     user_id: PydanticObjectId,
     data: ExpenseUpdate,
 ) -> ExpenseResponse:
-    expense = await get_expense_by_id(
-        expense_id=expense_id,
-        user_id=user_id,
-    )
-
-    if not expense:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Expense not found",
+    try:
+        expense = await get_expense_by_id(
+            expense_id=expense_id,
+            user_id=user_id,
         )
 
-    updated_expense = await update_expense(
-        expense=expense,
-        data=data,
-    )
+        if not expense:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Expense not found",
+            )
 
-    return ExpenseResponse.model_validate(updated_expense)
+        updated_expense = await update_expense(
+            expense=expense,
+            data=data,
+        )
+
+        return ExpenseResponse.model_validate(updated_expense)
+
+    except HTTPException:
+        raise
+
+    except Exception:
+        logger.exception(
+            "Error updating expense_id=%s for user_id=%s",
+            expense_id,
+            user_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to update expense",
+        )
 
 
 async def delete_expense_controller(
     expense_id: PydanticObjectId,
     user_id: PydanticObjectId,
 ) -> None:
-    expense = await get_expense_by_id(
-        expense_id=expense_id,
-        user_id=user_id,
-    )
-
-    if not expense:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Expense not found",
+    try:
+        expense = await get_expense_by_id(
+            expense_id=expense_id,
+            user_id=user_id,
         )
 
-    await delete_expense(expense)
+        if not expense:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Expense not found",
+            )
+
+        await delete_expense(expense)
+
+    except HTTPException:
+        raise
+
+    except Exception:
+        logger.exception(
+            "Error deleting expense_id=%s for user_id=%s",
+            expense_id,
+            user_id,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete expense",
+        )

@@ -8,7 +8,7 @@ from expense_tracker.database.connection import (
 )
 from expense_tracker.features.auth.routes import router as auth_router
 from expense_tracker.features.expense.routes import router as expense_router
-
+from expense_tracker.features.dashboard.routes import router as dashboard_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,7 +27,7 @@ app = FastAPI(
 
 app.include_router(auth_router)
 app.include_router(expense_router)
-
+app.include_router(dashboard_router)
 
 @app.get("/")
 async def root():

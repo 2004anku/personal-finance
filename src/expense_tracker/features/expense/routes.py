@@ -1,3 +1,5 @@
+from datetime import date
+
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, Response, status
 
@@ -43,10 +45,14 @@ async def create_expense(
     response_model=list[ExpenseResponse],
 )
 async def get_expenses(
+    start_date: date | None = None,
+    end_date: date | None = None,
     current_user: User = Depends(get_current_user),
 ) -> list[ExpenseResponse]:
     return await get_expenses_controller(
         user_id=current_user.id,
+        start_date=start_date,
+        end_date=end_date,
     )
 
 
