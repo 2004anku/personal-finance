@@ -5,16 +5,13 @@ import { useRouter } from "next/navigation";
 
 import { apiRequest } from "@/app/lib/api";
 
-type LoginResponse = {
-  access_token: string;
-  token_type: string;
-};
-
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -24,22 +21,26 @@ export default function LoginPage() {
 
     setError("");
 
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const data = await apiRequest<LoginResponse>("/auth/login", {
+      await apiRequest("/auth/register", {
         method: "POST",
         body: JSON.stringify({
+          name,
           email,
           password,
         }),
       });
 
-      localStorage.setItem("access_token", data.access_token);
-
-      router.push("/dashboard");
+      router.push("/login");
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Login failed");
+      setError(error instanceof Error ? error.message : "Registration failed");
     } finally {
       setLoading(false);
     }
@@ -50,15 +51,35 @@ export default function LoginPage() {
       <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-sm">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-900">
-            Welcome back
+            Create your account
           </h1>
 
           <p className="mt-2 text-sm text-zinc-500">
-            Sign in to your personal finance account
+            Create your personal finance account
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label
+              htmlFor="name"
+              className="mb-2 block text-sm font-medium text-zinc-700"
+            >
+              Full Name
+            </label>
+
+            <input
+              id="name"
+              name="name"
+              type="text"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Enter your full name"
+              required
+              className="w-full rounded-lg border border-zinc-300 px-4 py-3 text-sm outline-none transition focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10"
+            />
+          </div>
+
           <div>
             <label
               htmlFor="email"
@@ -93,7 +114,27 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="Enter your password"
+              placeholder="Create a password"
+              required
+              className="w-full rounded-lg border border-zinc-300 px-4 py-3 text-sm outline-none transition focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="confirmPassword"
+              className="mb-2 block text-sm font-medium text-zinc-700"
+            >
+              Confirm Password
+            </label>
+
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              placeholder="Confirm your password"
               required
               className="w-full rounded-lg border border-zinc-300 px-4 py-3 text-sm outline-none transition focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10"
             />
@@ -106,17 +147,17 @@ export default function LoginPage() {
             disabled={loading}
             className="w-full rounded-lg bg-zinc-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? "Signing in..." : "Sign in"}
+            {loading ? "Creating account..." : "Create account"}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-zinc-500">
-          Don't have an account?{" "}
+          Already have an account?{" "}
           <a
-            href="/register"
+            href="/login"
             className="font-medium text-zinc-900 hover:underline"
           >
-            Create one
+            Sign in
           </a>
         </p>
       </div>
