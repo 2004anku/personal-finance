@@ -3,10 +3,20 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "@/app/lib/api";
 
+type Expense = {
+  id: string;
+  amount: number | string;
+  category: string;
+  note: string | null;
+  payment_mode: string;
+  expense_date: string;
+};
+
 type AddExpenseModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onExpenseAdded: () => void;
+  expense?: Expense | null;
 };
 
 const categories = [
@@ -24,6 +34,7 @@ const paymentModes = ["Cash", "UPI", "Card", "Bank Transfer", "Other"];
 
 function getTodayDate() {
   const today = new Date();
+
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, "0");
   const day = String(today.getDate()).padStart(2, "0");
@@ -35,7 +46,10 @@ export default function AddExpenseModal({
   isOpen,
   onClose,
   onExpenseAdded,
+  expense = null,
 }: AddExpenseModalProps) {
+  const isEditMode = Boolean(expense);
+
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
   const [paymentMode, setPaymentMode] = useState("UPI");
@@ -44,6 +58,28 @@ export default function AddExpenseModal({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    if (expense) {
+      setAmount(String(expense.amount));
+      setCategory(expense.category);
+      setPaymentMode(expense.payment_mode);
+      setExpenseDate(expense.expense_date);
+      setNote(expense.note || "");
+    } else {
+      setAmount("");
+      setCategory("Food");
+      setPaymentMode("UPI");
+      setExpenseDate(getTodayDate());
+      setNote("");
+    }
+
+    setError("");
+  }, [isOpen, expense]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -81,39 +117,46 @@ export default function AddExpenseModal({
       setIsSubmitting(true);
       setError("");
 
-      await apiRequest("/expenses", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          amount: Number(amount),
-          category,
-          note: note.trim() || null,
-          payment_mode: paymentMode,
-          expense_date: expenseDate,
-        }),
-      });
+      const payload = {
+        amount: Number(amount),
+        category,
+        note: note.trim() || null,
+        payment_mode: paymentMode,
+        expense_date: expenseDate,
+      };
 
-      // Reset form
-      setAmount("");
-      setCategory("Food");
-      setPaymentMode("UPI");
-      setExpenseDate(getTodayDate());
-      setNote("");
+      if (isEditMode && expense) {
+        await apiRequest(`/expenses/${expense.id}`, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        await apiRequest("/expenses", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
+      }
 
-      // Close modal
       onClose();
-
-      // Refresh dashboard data
       onExpenseAdded();
     } catch (error) {
-      console.error("Failed to add expense:", error);
+      console.error(
+        isEditMode ? "Failed to update expense:" : "Failed to add expense:",
+        error,
+      );
 
       setError(
         error instanceof Error
           ? error.message
-          : "Unable to add expense. Please try again.",
+          : isEditMode
+            ? "Unable to update expense. Please try again."
+            : "Unable to add expense. Please try again.",
       );
     } finally {
       setIsSubmitting(false);
@@ -130,12 +173,17 @@ export default function AddExpenseModal({
       }}
     >
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl">
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-5">
           <div>
-            <h2 className="text-lg font-semibold text-zinc-900">Add Expense</h2>
+            <h2 className="text-lg font-semibold text-zinc-900">
+              {isEditMode ? "Edit Expense" : "Add Expense"}
+            </h2>
 
-            <p className="mt-1 text-sm text-zinc-500">Record a new expense.</p>
+            <p className="mt-1 text-sm text-zinc-500">
+              {isEditMode
+                ? "Update the details of this expense."
+                : "Record a new expense."}
+            </p>
           </div>
 
           <button
@@ -149,16 +197,13 @@ export default function AddExpenseModal({
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
-          {/* Error */}
           {error && (
             <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
               {error}
             </div>
           )}
 
-          {/* Amount */}
           <div>
             <label
               htmlFor="amount"
@@ -187,7 +232,6 @@ export default function AddExpenseModal({
             </div>
           </div>
 
-          {/* Category + Payment */}
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label
@@ -236,7 +280,6 @@ export default function AddExpenseModal({
             </div>
           </div>
 
-          {/* Date */}
           <div>
             <label
               htmlFor="expenseDate"
@@ -256,7 +299,6 @@ export default function AddExpenseModal({
             />
           </div>
 
-          {/* Note */}
           <div>
             <label
               htmlFor="note"
@@ -278,7 +320,6 @@ export default function AddExpenseModal({
             />
           </div>
 
-          {/* Actions */}
           <div className="flex justify-end gap-3 border-t border-zinc-100 pt-5">
             <button
               type="button"
@@ -294,7 +335,13 @@ export default function AddExpenseModal({
               disabled={isSubmitting}
               className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSubmitting ? "Adding..." : "Add Expense"}
+              {isSubmitting
+                ? isEditMode
+                  ? "Saving..."
+                  : "Adding..."
+                : isEditMode
+                  ? "Save Changes"
+                  : "Add Expense"}
             </button>
           </div>
         </form>

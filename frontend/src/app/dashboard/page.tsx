@@ -216,9 +216,10 @@ export default function DashboardPage() {
 
             <button
               type="button"
-              onClick={() => setShowAddExpense(true)}
-              className="flex w-full items-center rounded-lg px-4 py-3 text-left text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
+              onClick={() => router.push("/expenses")}
+              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
             >
+              <span>▤</span>
               Expenses
             </button>
           </nav>
