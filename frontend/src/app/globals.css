@@ -1,26 +1,138 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  /* ========================================
+     Colors
+     ======================================== */
+
+  --background: #f4f4f5;
   --foreground: #171717;
+
+  --surface: #ffffff;
+
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+
+  --border: #e4e4e7;
+  --border-subtle: #f4f4f5;
+
+  --primary: #18181b;
+  --primary-hover: #27272a;
+  --primary-foreground: #ffffff;
+
+  --input-background: #ffffff;
+  --focus: #18181b;
+  --focus-ring: rgb(24 24 27 / 10%);
+
+  --error: #dc2626;
+
+  /* ========================================
+     Fonts
+     ======================================== */
+
+  --font-family-heading: "Gilroy", sans-serif;
+  --font-family-primary: var(--font-inter), sans-serif;
+
+  /* ========================================
+     Typography
+     ======================================== */
+
+  --fs-heading: 2rem;
+  --fs-subheading: 1.25rem;
+  --fs-body: 1rem;
+  --fs-small: 0.875rem;
+
+  /* Dashboard Typography */
+
+  --fs-page-title: 1.5rem;
+  --fs-card-value: 1.5rem;
+  --fs-section-title: 1.125rem;
+  --fs-label: 0.875rem;
+  --fs-caption: 0.75rem;
+
+  /* ========================================
+     Radius
+     ======================================== */
+
+  --radius-card-value: 0.75rem;
+  --radius-control-value: 0.5rem;
+  --radius-full-value: 9999px;
+
+  /* ========================================
+     Shadows
+     ======================================== */
+
+  --shadow-card-value: 0 1px 2px rgb(0 0 0 / 5%);
 }
 
 @theme inline {
+  /* ========================================
+     Colors
+     ======================================== */
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-page: var(--background);
+  --color-surface: var(--surface);
+
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+
+  --color-input: var(--input-background);
+  --color-focus: var(--focus);
+  --color-focus-ring: var(--focus-ring);
+
+  --color-error: var(--error);
+
+  /* ========================================
+     Fonts
+     ======================================== */
+
+  --font-heading: var(--font-family-heading);
+  --font-primary: var(--font-family-primary);
+
+  /* ========================================
+     Typography
+     ======================================== */
+
+  --text-heading: var(--fs-heading);
+  --text-subheading: var(--fs-subheading);
+  --text-body: var(--fs-body);
+  --text-small: var(--fs-small);
+
+  --text-page-title: var(--fs-page-title);
+  --text-card-value: var(--fs-card-value);
+  --text-section-title: var(--fs-section-title);
+  --text-label: var(--fs-label);
+  --text-caption: var(--fs-caption);
+
+  /* ========================================
+     Radius
+     ======================================== */
+
+  --radius-card: var(--radius-card-value);
+  --radius-control: var(--radius-control-value);
+  --radius-full: var(--radius-full-value);
+
+  /* ========================================
+     Shadow
+     ======================================== */
+
+  --shadow-card: var(--shadow-card-value);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-family-primary);
 }

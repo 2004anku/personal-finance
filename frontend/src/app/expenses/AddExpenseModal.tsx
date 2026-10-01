@@ -175,11 +175,11 @@ export default function AddExpenseModal({
       <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-xl">
         <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-5">
           <div>
-            <h2 className="text-lg font-semibold text-zinc-900">
+            <h2 className="font-heading text-subheading font-semibold text-zinc-900">
               {isEditMode ? "Edit Expense" : "Add Expense"}
             </h2>
 
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 font-primary text-body text-zinc-500">
               {isEditMode
                 ? "Update the details of this expense."
                 : "Record a new expense."}
@@ -190,7 +190,7 @@ export default function AddExpenseModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex h-9 w-9 items-center justify-center rounded-lg text-xl text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-9 w-9 items-center justify-center rounded-lg font-primary text-body text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Close modal"
           >
             ×
@@ -199,7 +199,7 @@ export default function AddExpenseModal({
 
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 font-primary text-body text-red-600">
               {error}
             </div>
           )}
@@ -207,13 +207,13 @@ export default function AddExpenseModal({
           <div>
             <label
               htmlFor="amount"
-              className="mb-2 block text-sm font-medium text-zinc-700"
+              className="mb-2 block font-primary text-body font-medium text-zinc-700"
             >
               Amount
             </label>
 
             <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 font-primary text-body text-zinc-500">
                 ₹
               </span>
 
@@ -227,7 +227,7 @@ export default function AddExpenseModal({
                 onChange={(event) => setAmount(event.target.value)}
                 required
                 disabled={isSubmitting}
-                className="w-full rounded-lg border border-zinc-200 bg-white py-2.5 pl-8 pr-3 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
+                className="w-full rounded-lg border border-zinc-200 bg-white py-2.5 pl-8 pr-3 font-primary text-body text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
               />
             </div>
           </div>
@@ -236,7 +236,7 @@ export default function AddExpenseModal({
             <div>
               <label
                 htmlFor="category"
-                className="mb-2 block text-sm font-medium text-zinc-700"
+                className="mb-2 block font-primary text-body font-medium text-zinc-700"
               >
                 Category
               </label>
@@ -246,7 +246,7 @@ export default function AddExpenseModal({
                 value={category}
                 onChange={(event) => setCategory(event.target.value)}
                 disabled={isSubmitting}
-                className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
+                className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 font-primary text-body text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
               >
                 {categories.map((item) => (
                   <option key={item} value={item}>
@@ -259,7 +259,7 @@ export default function AddExpenseModal({
             <div>
               <label
                 htmlFor="paymentMode"
-                className="mb-2 block text-sm font-medium text-zinc-700"
+                className="mb-2 block font-primary text-body font-medium text-zinc-700"
               >
                 Payment Method
               </label>
@@ -269,7 +269,7 @@ export default function AddExpenseModal({
                 value={paymentMode}
                 onChange={(event) => setPaymentMode(event.target.value)}
                 disabled={isSubmitting}
-                className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
+                className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 font-primary text-body text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
               >
                 {paymentModes.map((item) => (
                   <option key={item} value={item}>
@@ -283,7 +283,7 @@ export default function AddExpenseModal({
           <div>
             <label
               htmlFor="expenseDate"
-              className="mb-2 block text-sm font-medium text-zinc-700"
+              className="mb-2 block font-primary text-body font-medium text-zinc-700"
             >
               Date
             </label>
@@ -295,17 +295,19 @@ export default function AddExpenseModal({
               onChange={(event) => setExpenseDate(event.target.value)}
               required
               disabled={isSubmitting}
-              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
+              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 font-primary text-body text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
             />
           </div>
 
           <div>
             <label
               htmlFor="note"
-              className="mb-2 block text-sm font-medium text-zinc-700"
+              className="mb-2 block font-primary text-body font-medium text-zinc-700"
             >
               Note
-              <span className="ml-1 font-normal text-zinc-400">(optional)</span>
+              <span className="ml-1 font-primary text-body font-normal text-zinc-400">
+                (optional)
+              </span>
             </label>
 
             <textarea
@@ -316,7 +318,7 @@ export default function AddExpenseModal({
               value={note}
               onChange={(event) => setNote(event.target.value)}
               disabled={isSubmitting}
-              className="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
+              className="w-full resize-none rounded-lg border border-zinc-200 bg-white px-3 py-2.5 font-primary text-body text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
             />
           </div>
 
@@ -325,7 +327,7 @@ export default function AddExpenseModal({
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="rounded-lg border border-zinc-200 px-4 py-2.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-lg border border-zinc-200 px-4 py-2.5 font-primary text-body font-medium text-zinc-600 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
@@ -333,7 +335,7 @@ export default function AddExpenseModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="rounded-lg bg-zinc-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg bg-zinc-900 px-5 py-2.5 font-primary text-body font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting
                 ? isEditMode

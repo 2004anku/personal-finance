@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import AddExpenseModal from "@/components/AddExpenseModal";
+
+import AddExpenseModal from "@/app/expenses/AddExpenseModal";
 import { apiRequest } from "@/app/lib/api";
+import Sidebar from "@/components/Sidebar/Sidebar";
 
 type User = {
   id: string;
@@ -124,20 +126,15 @@ export default function DashboardPage() {
     loadDashboard();
   }, [router]);
 
-  function handleLogout() {
-    localStorage.removeItem("access_token");
-    router.push("/login");
-  }
-
   if (loading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-100">
         <div className="text-center">
-          <p className="text-sm font-medium text-zinc-700">
+          <p className="font-primary text-label font-medium text-zinc-700">
             Loading dashboard...
           </p>
 
-          <p className="mt-1 text-xs text-zinc-400">
+          <p className="mt-1 font-primary text-caption text-zinc-400">
             Fetching your financial data
           </p>
         </div>
@@ -149,17 +146,18 @@ export default function DashboardPage() {
     return (
       <main className="flex min-h-screen items-center justify-center bg-zinc-100 px-4">
         <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 text-center">
-          <h1 className="text-lg font-semibold text-zinc-900">
+          <h1 className="font-heading text-section-title font-semibold text-zinc-900">
             Unable to load dashboard
           </h1>
 
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 font-primary text-label text-zinc-500">
             {error || "Something went wrong."}
           </p>
 
           <button
+            type="button"
             onClick={() => router.push("/login")}
-            className="mt-5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+            className="mt-5 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
           >
             Go to Login
           </button>
@@ -193,68 +191,17 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-zinc-100">
-      {/* Sidebar */}
-      <aside className="fixed hidden h-screen w-64 border-r border-zinc-200 bg-white lg:block">
-        <div className="flex h-full flex-col">
-          {/* Logo */}
-          <div className="flex h-20 items-center border-b border-zinc-200 px-6">
-            <div>
-              <h1 className="text-xl font-bold text-zinc-900">Money Tracker</h1>
+      <Sidebar />
 
-              <p className="text-xs text-zinc-500">Personal Finance</p>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 space-y-2 p-4">
-            <a
-              href="/dashboard"
-              className="flex items-center rounded-lg bg-zinc-900 px-4 py-3 text-sm font-medium text-white"
-            >
-              Dashboard
-            </a>
-
-            <button
-              type="button"
-              onClick={() => router.push("/expenses")}
-              className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
-            >
-              <span>▤</span>
-              Expenses
-            </button>
-          </nav>
-
-          {/* User */}
-          <div className="border-t border-zinc-200 p-4">
-            <div className="mb-3">
-              <p className="text-sm font-medium text-zinc-900">
-                {user?.name || "User"}
-              </p>
-
-              <p className="truncate text-xs text-zinc-500">
-                {user?.email || ""}
-              </p>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="w-full rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main */}
       <main className="lg:ml-64">
-        {/* Header */}
         <header className="border-b border-zinc-200 bg-white">
           <div className="flex h-20 items-center justify-between px-6 lg:px-8">
             <div>
-              <h2 className="text-2xl font-bold text-zinc-900">Dashboard</h2>
+              <h2 className="font-heading text-page-title font-bold text-zinc-900">
+                Dashboard
+              </h2>
 
-              <p className="text-sm text-zinc-500">
+              <p className="font-primary text-label text-zinc-500">
                 Here's an overview of your spending.
               </p>
             </div>
@@ -262,63 +209,61 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => setShowAddExpense(true)}
-              className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800"
+              className="rounded-lg bg-zinc-900 px-4 py-2.5 font-primary text-label font-medium text-white transition hover:bg-zinc-800"
             >
               + Add Expense
             </button>
           </div>
         </header>
 
-        {/* Dashboard Content */}
         <div className="space-y-6 p-6 lg:p-8">
-          {/* Summary Cards */}
           <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {summaryCards.map((card) => (
               <div
                 key={card.title}
                 className="rounded-xl border border-zinc-200 bg-white p-5"
               >
-                <p className="text-sm font-medium text-zinc-500">
+                <p className="font-primary text-label font-medium text-zinc-500">
                   {card.title}
                 </p>
 
-                <p className="mt-2 text-2xl font-bold text-zinc-900">
+                <p className="mt-2 font-heading text-card-value font-bold text-zinc-900">
                   {card.value}
                 </p>
 
-                <p className="mt-1 text-xs text-zinc-400">{card.description}</p>
+                <p className="mt-1 font-primary text-caption text-zinc-400">
+                  {card.description}
+                </p>
               </div>
             ))}
           </section>
 
-          {/* Category + Payment */}
           <section className="grid gap-6 xl:grid-cols-2">
-            {/* Category */}
             <div className="rounded-xl border border-zinc-200 bg-white p-6">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-zinc-900">
+                <h3 className="font-heading text-section-title font-semibold text-zinc-900">
                   Spending by Category
                 </h3>
 
-                <p className="text-sm text-zinc-500">
+                <p className="font-primary text-label text-zinc-500">
                   Where your money is going this month.
                 </p>
               </div>
 
               <div className="space-y-5">
                 {dashboard.categories.length === 0 ? (
-                  <p className="text-sm text-zinc-400">
+                  <p className="font-primary text-label text-zinc-400">
                     No expenses recorded yet.
                   </p>
                 ) : (
                   dashboard.categories.map((item) => (
                     <div key={item.category}>
                       <div className="mb-2 flex items-center justify-between">
-                        <span className="text-sm font-medium text-zinc-700">
+                        <span className="font-primary text-label font-medium text-zinc-700">
                           {item.category}
                         </span>
 
-                        <span className="text-sm text-zinc-500">
+                        <span className="font-primary text-label text-zinc-500">
                           {formatCurrency(item.amount)}
                         </span>
                       </div>
@@ -332,7 +277,7 @@ export default function DashboardPage() {
                         />
                       </div>
 
-                      <p className="mt-1 text-right text-xs text-zinc-400">
+                      <p className="mt-1 text-right font-primary text-caption text-zinc-400">
                         {item.percentage}%
                       </p>
                     </div>
@@ -341,32 +286,31 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Payment Methods */}
             <div className="rounded-xl border border-zinc-200 bg-white p-6">
               <div className="mb-6">
-                <h3 className="text-lg font-semibold text-zinc-900">
+                <h3 className="font-heading text-section-title font-semibold text-zinc-900">
                   Spending by Payment Method
                 </h3>
 
-                <p className="text-sm text-zinc-500">
+                <p className="font-primary text-label text-zinc-500">
                   How you are paying for your expenses.
                 </p>
               </div>
 
               <div className="space-y-5">
                 {dashboard.payment_modes.length === 0 ? (
-                  <p className="text-sm text-zinc-400">
+                  <p className="font-primary text-label text-zinc-400">
                     No expenses recorded yet.
                   </p>
                 ) : (
                   dashboard.payment_modes.map((item) => (
                     <div key={item.payment_mode}>
                       <div className="mb-2 flex items-center justify-between">
-                        <span className="text-sm font-medium text-zinc-700">
+                        <span className="font-primary text-label font-medium text-zinc-700">
                           {item.payment_mode}
                         </span>
 
-                        <span className="text-sm text-zinc-500">
+                        <span className="font-primary text-label text-zinc-500">
                           {formatCurrency(item.amount)}
                         </span>
                       </div>
@@ -380,7 +324,7 @@ export default function DashboardPage() {
                         />
                       </div>
 
-                      <p className="mt-1 text-right text-xs text-zinc-400">
+                      <p className="mt-1 text-right font-primary text-caption text-zinc-400">
                         {item.percentage}%
                       </p>
                     </div>
@@ -390,15 +334,14 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* Recent Expenses */}
           <section className="rounded-xl border border-zinc-200 bg-white">
             <div className="flex items-center justify-between border-b border-zinc-200 p-6">
               <div>
-                <h3 className="text-lg font-semibold text-zinc-900">
+                <h3 className="font-heading text-section-title font-semibold text-zinc-900">
                   Recent Expenses
                 </h3>
 
-                <p className="text-sm text-zinc-500">
+                <p className="font-primary text-label text-zinc-500">
                   Your latest transactions.
                 </p>
               </div>
@@ -406,7 +349,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setShowAddExpense(true)}
-                className="text-sm font-medium text-zinc-900 hover:underline"
+                className="font-primary text-label font-medium text-zinc-900 hover:underline"
               >
                 Add expense
               </button>
@@ -414,13 +357,13 @@ export default function DashboardPage() {
 
             <div className="overflow-x-auto">
               {recentExpenses.length === 0 ? (
-                <div className="p-6 text-sm text-zinc-400">
+                <div className="p-6 font-primary text-label text-zinc-400">
                   No expenses recorded yet.
                 </div>
               ) : (
                 <table className="w-full min-w-[700px] text-left">
                   <thead>
-                    <tr className="border-b border-zinc-200 text-xs uppercase tracking-wide text-zinc-400">
+                    <tr className="border-b border-zinc-200 font-primary text-caption uppercase tracking-wide text-zinc-400">
                       <th className="px-6 py-4 font-medium">Category</th>
 
                       <th className="px-6 py-4 font-medium">Note</th>
@@ -441,23 +384,23 @@ export default function DashboardPage() {
                         key={expense.id}
                         className="border-b border-zinc-100 last:border-0"
                       >
-                        <td className="px-6 py-4 text-sm font-medium text-zinc-900">
+                        <td className="px-6 py-4 font-primary text-label font-medium text-zinc-900">
                           {expense.category}
                         </td>
 
-                        <td className="px-6 py-4 text-sm text-zinc-600">
+                        <td className="px-6 py-4 font-primary text-label text-zinc-600">
                           {expense.note || "—"}
                         </td>
 
-                        <td className="px-6 py-4 text-sm text-zinc-600">
+                        <td className="px-6 py-4 font-primary text-label text-zinc-600">
                           {expense.payment_mode}
                         </td>
 
-                        <td className="px-6 py-4 text-sm text-zinc-500">
+                        <td className="px-6 py-4 font-primary text-label text-zinc-500">
                           {formatDate(expense.expense_date)}
                         </td>
 
-                        <td className="px-6 py-4 text-right text-sm font-semibold text-zinc-900">
+                        <td className="px-6 py-4 text-right font-primary text-label font-semibold text-zinc-900">
                           {formatCurrency(expense.amount)}
                         </td>
                       </tr>
@@ -470,7 +413,6 @@ export default function DashboardPage() {
         </div>
       </main>
 
-      {/* Add Expense Modal */}
       <AddExpenseModal
         isOpen={showAddExpense}
         onClose={() => setShowAddExpense(false)}
