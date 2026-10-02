@@ -16,6 +16,30 @@ type Expense = {
   expense_date: string;
 };
 
+type ExpenseDateRange = "all" | "this_month" | "last_6_months" | "last_year";
+
+const FILTER_OPTIONS: {
+  value: ExpenseDateRange;
+  label: string;
+}[] = [
+  {
+    value: "all",
+    label: "All",
+  },
+  {
+    value: "this_month",
+    label: "This Month",
+  },
+  {
+    value: "last_6_months",
+    label: "Last 6 Months",
+  },
+  {
+    value: "last_year",
+    label: "Last 1 Year",
+  },
+];
+
 function formatCurrency(value: number | string) {
   return `₹${Number(value).toLocaleString("en-IN")}`;
 }
@@ -37,10 +61,14 @@ export default function ExpensesPage() {
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(
     null,
   );
+
+  const [showFilter, setShowFilter] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<ExpenseDateRange>("all");
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function loadExpenses() {
+  async function loadExpenses(dateRange: ExpenseDateRange = selectedFilter) {
     const token = localStorage.getItem("access_token");
 
     if (!token) {
@@ -52,7 +80,10 @@ export default function ExpensesPage() {
       setLoading(true);
       setError("");
 
-      const data = await apiRequest<Expense[]>("/expenses", {
+      const endpoint =
+        dateRange === "all" ? "/expenses" : `/expenses?date_range=${dateRange}`;
+
+      const data = await apiRequest<Expense[]>(endpoint, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -74,6 +105,13 @@ export default function ExpensesPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleFilterChange(dateRange: ExpenseDateRange) {
+    setSelectedFilter(dateRange);
+    setShowFilter(false);
+
+    loadExpenses(dateRange);
   }
 
   async function handleDeleteExpense(expenseId: string) {
@@ -118,7 +156,7 @@ export default function ExpensesPage() {
   }
 
   useEffect(() => {
-    loadExpenses();
+    loadExpenses("all");
   }, []);
 
   return (
@@ -159,6 +197,35 @@ export default function ExpensesPage() {
                 <p className="mt-1 font-primary text-label text-zinc-500">
                   Your complete expense history.
                 </p>
+
+                <div className="relative mt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowFilter((current) => !current)}
+                    className="rounded-lg border border-zinc-200 bg-white px-4 py-2 font-primary text-label font-medium text-zinc-700 transition hover:bg-zinc-50"
+                  >
+                    Filter
+                  </button>
+
+                  {showFilter && (
+                    <div className="absolute left-0 top-full z-20 mt-2 w-52 rounded-lg border border-zinc-200 bg-white p-1 shadow-lg">
+                      {FILTER_OPTIONS.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => handleFilterChange(option.value)}
+                          className={`w-full rounded-md px-3 py-2 text-left font-primary text-label transition ${
+                            selectedFilter === option.value
+                              ? "bg-zinc-100 font-medium text-zinc-900"
+                              : "text-zinc-700 hover:bg-zinc-50"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
 
               {loading && (
@@ -185,7 +252,7 @@ export default function ExpensesPage() {
 
                   <button
                     type="button"
-                    onClick={loadExpenses}
+                    onClick={() => loadExpenses()}
                     className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
                   >
                     Try Again
@@ -196,11 +263,11 @@ export default function ExpensesPage() {
               {!loading && !error && expenses.length === 0 && (
                 <div className="p-8 text-center">
                   <p className="font-primary text-label font-medium text-zinc-700">
-                    No expenses recorded yet.
+                    No expenses found for this period.
                   </p>
 
                   <p className="mt-1 font-primary text-label text-zinc-400">
-                    Start tracking your spending by adding your first expense.
+                    Try selecting a different date range.
                   </p>
 
                   <button

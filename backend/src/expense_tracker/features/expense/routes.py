@@ -1,5 +1,3 @@
-from datetime import date
-
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Depends, Response, status
 
@@ -16,6 +14,7 @@ from expense_tracker.features.expense.schema import (
     ExpenseResponse,
     ExpenseUpdate,
 )
+from expense_tracker.features.expense.service import ExpenseDateRange
 from expense_tracker.features.user.model import User
 
 
@@ -45,14 +44,12 @@ async def create_expense(
     response_model=list[ExpenseResponse],
 )
 async def get_expenses(
-    start_date: date | None = None,
-    end_date: date | None = None,
+    date_range: ExpenseDateRange = ExpenseDateRange.ALL,
     current_user: User = Depends(get_current_user),
 ) -> list[ExpenseResponse]:
     return await get_expenses_controller(
         user_id=current_user.id,
-        start_date=start_date,
-        end_date=end_date,
+        date_range=date_range,
     )
 
 
@@ -99,4 +96,6 @@ async def delete_expense(
         user_id=current_user.id,
     )
 
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    return Response(
+        status_code=status.HTTP_204_NO_CONTENT,
+    )

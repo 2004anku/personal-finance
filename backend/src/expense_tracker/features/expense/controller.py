@@ -1,4 +1,3 @@
-from datetime import date
 import logging
 
 from beanie import PydanticObjectId
@@ -10,6 +9,7 @@ from expense_tracker.features.expense.schema import (
     ExpenseUpdate,
 )
 from expense_tracker.features.expense.service import (
+    ExpenseDateRange,
     create_expense,
     delete_expense,
     get_expense_by_id,
@@ -49,14 +49,12 @@ async def create_expense_controller(
 
 async def get_expenses_controller(
     user_id: PydanticObjectId,
-    start_date: date | None = None,
-    end_date: date | None = None,
+    date_range: ExpenseDateRange = ExpenseDateRange.ALL,
 ) -> list[ExpenseResponse]:
     try:
         expenses = await get_expenses(
             user_id=user_id,
-            start_date=start_date,
-            end_date=end_date,
+            date_range=date_range,
         )
 
         return [

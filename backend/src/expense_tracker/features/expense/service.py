@@ -1,4 +1,6 @@
+from calendar import monthrange
 from datetime import date
+from enum import Enum
 
 from beanie import PydanticObjectId
 
@@ -7,6 +9,72 @@ from expense_tracker.features.expense.schema import (
     ExpenseCreate,
     ExpenseUpdate,
 )
+
+
+class ExpenseDateRange(str, Enum):
+    ALL = "all"
+    THIS_MONTH = "this_month"
+    LAST_6_MONTHS = "last_6_months"
+    LAST_YEAR = "last_year"
+
+
+def subtract_months(
+    current_date: date,
+    months: int,
+) -> date:
+    total_months = (
+        current_date.year * 12
+        + current_date.month
+        - 1
+    )
+
+    target_months = total_months - months
+
+    year = target_months // 12
+    month = target_months % 12 + 1
+
+    day = min(
+        current_date.day,
+        monthrange(year, month)[1],
+    )
+
+    return date(
+        year,
+        month,
+        day,
+    )
+
+
+def get_date_range(
+    date_range: ExpenseDateRange,
+) -> tuple[date | None, date | None]:
+    today = date.today()
+
+    if date_range == ExpenseDateRange.ALL:
+        return None, None
+
+    if date_range == ExpenseDateRange.THIS_MONTH:
+        start_date = today.replace(day=1)
+
+        return start_date, today
+
+    if date_range == ExpenseDateRange.LAST_6_MONTHS:
+        start_date = subtract_months(
+            today,
+            6,
+        )
+
+        return start_date, today
+
+    if date_range == ExpenseDateRange.LAST_YEAR:
+        start_date = subtract_months(
+            today,
+            12,
+        )
+
+        return start_date, today
+
+    return None, None
 
 
 async def create_expense(
@@ -29,9 +97,12 @@ async def create_expense(
 
 async def get_expenses(
     user_id: PydanticObjectId,
-    start_date: date | None = None,
-    end_date: date | None = None,
+    date_range: ExpenseDateRange = ExpenseDateRange.ALL,
 ) -> list[Expense]:
+    start_date, end_date = get_date_range(
+        date_range,
+    )
+
     query = Expense.find(
         Expense.user_id == user_id,
     )
@@ -70,7 +141,11 @@ async def update_expense(
     )
 
     for field, value in update_data.items():
-        setattr(expense, field, value)
+        setattr(
+            expense,
+            field,
+            value,
+        )
 
     expense.updated_at = __import__(
         "datetime"
