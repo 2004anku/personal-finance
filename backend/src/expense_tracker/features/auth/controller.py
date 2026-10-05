@@ -5,6 +5,7 @@ from expense_tracker.features.auth.schema import (
     LoginRequest,
     RegisterRequest,
     TokenResponse,
+     UpdateProfileRequest,
 )
 from expense_tracker.features.auth.service import (
     hash_password,
@@ -15,6 +16,7 @@ from expense_tracker.features.user.schema import UserResponse
 from expense_tracker.features.user.service import (
     create_user,
     get_user_by_email,
+    update_user_profile,
 )
 
 
@@ -66,7 +68,25 @@ async def login_user(request: LoginRequest) -> TokenResponse:
         access_token=access_token,
         token_type="bearer",
     )
+async def update_current_user_profile(
+    user: User,
+    request: UpdateProfileRequest,
+) -> UserResponse:
+    existing_user = await get_user_by_email(request.email)
 
+    if existing_user and existing_user.id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email is already registered",
+        )
+
+    updated_user = await update_user_profile(
+        user=user,
+        name=request.name,
+        email=request.email,
+    )
+
+    return UserResponse.model_validate(updated_user)
 
 async def get_current_user_info(user: User) -> UserResponse:
     return UserResponse.model_validate(user)

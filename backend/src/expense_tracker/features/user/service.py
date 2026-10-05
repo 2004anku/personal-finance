@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from beanie import PydanticObjectId
 
 from expense_tracker.features.user.model import User
@@ -23,5 +25,19 @@ async def create_user(
     )
 
     await user.insert()
+
+    return user
+
+
+async def update_user_profile(
+    user: User,
+    name: str,
+    email: str,
+) -> User:
+    user.name = name
+    user.email = email
+    user.updated_at = datetime.now(timezone.utc)
+
+    await user.save()
 
     return user

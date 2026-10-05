@@ -5,11 +5,13 @@ from expense_tracker.features.auth.controller import (
     get_current_user_info,
     login_user,
     register_user,
+    update_current_user_profile,
 )
 from expense_tracker.features.auth.schema import (
     LoginRequest,
     RegisterRequest,
     TokenResponse,
+    UpdateProfileRequest,
 )
 from expense_tracker.features.user.model import User
 from expense_tracker.features.user.schema import UserResponse
@@ -45,3 +47,13 @@ async def get_me(
     current_user: User = Depends(get_current_user),
 ) -> UserResponse:
     return await get_current_user_info(current_user)
+
+@router.put("/profile", response_model=UserResponse)
+async def update_profile(
+    request: UpdateProfileRequest,
+    current_user: User = Depends(get_current_user),
+) -> UserResponse:
+    return await update_current_user_profile(
+        user=current_user,
+        request=request,
+    )
