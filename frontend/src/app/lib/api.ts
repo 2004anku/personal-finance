@@ -18,6 +18,10 @@ export async function apiRequest<T>(
 
   const data = await response.json().catch(() => null);
 
+  if (response.status === 401) {
+    throw new Error("AUTHENTICATION_REQUIRED");
+  }
+
   if (!response.ok) {
     throw new Error(data?.detail || "Something went wrong. Please try again.");
   }

@@ -34,7 +34,7 @@ export default function Sidebar() {
       const token = localStorage.getItem("access_token");
 
       if (!token) {
-        router.push("/login");
+        router.replace("/login");
         return;
       }
 
@@ -50,7 +50,7 @@ export default function Sidebar() {
         console.error("Failed to load user:", error);
 
         localStorage.removeItem("access_token");
-        router.push("/login");
+        router.replace("/login");
       }
     }
 
@@ -59,8 +59,14 @@ export default function Sidebar() {
 
   function handleLogout() {
     localStorage.removeItem("access_token");
-    router.push("/login");
+    router.replace("/login");
   }
+
+  function handleProfileClick() {
+    router.push("/profile");
+  }
+
+  const userInitial = user?.name?.charAt(0).toUpperCase() || "?";
 
   return (
     <aside className="fixed hidden h-screen w-64 border-r border-zinc-200 bg-white lg:block">
@@ -72,6 +78,34 @@ export default function Sidebar() {
 
             <p className="text-xs text-zinc-500">Personal Finance</p>
           </div>
+        </div>
+
+        {/* Profile */}
+        <div className="border-b border-zinc-200 p-4">
+          <button
+            type="button"
+            onClick={handleProfileClick}
+            className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition ${
+              pathname === "/profile" ? "bg-zinc-100" : "hover:bg-zinc-100"
+            }`}
+          >
+            {/* Avatar */}
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-sm font-semibold text-white">
+              {userInitial}
+            </div>
+
+            {/* User */}
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-medium text-zinc-900">
+                {user?.name || "Loading..."}
+              </p>
+
+              <p className="text-xs text-zinc-500">View Profile</p>
+            </div>
+
+            {/* Arrow */}
+            <span className="text-lg text-zinc-400">›</span>
+          </button>
         </div>
 
         {/* Navigation */}
@@ -97,22 +131,12 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* User */}
+        {/* Logout */}
         <div className="border-t border-zinc-200 p-4">
-          <div className="mb-3">
-            <p className="text-sm font-medium text-zinc-900">
-              {user?.name || "Loading..."}
-            </p>
-
-            <p className="truncate text-xs text-zinc-500">
-              {user?.email || ""}
-            </p>
-          </div>
-
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100"
+            className="w-full rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
           >
             Logout
           </button>
