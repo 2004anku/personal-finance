@@ -6,7 +6,7 @@ from pymongo import AsyncMongoClient
 from expense_tracker.core.config import settings
 from expense_tracker.features.user.model import User
 from expense_tracker.features.expense.model import Expense
-
+from expense_tracker.features.income.model import Income
 
 type_registry = TypeRegistry(
     [
@@ -31,6 +31,7 @@ async def connect_to_database():
         document_models=[
             User,
             Expense,
+            Income,
         ],
     )
 

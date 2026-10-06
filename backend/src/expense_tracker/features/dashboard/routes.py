@@ -23,3 +23,4 @@ async def get_dashboard(
     return await get_dashboard_controller(
         user_id=current_user.id,
     )
+

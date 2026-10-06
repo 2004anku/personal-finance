@@ -16,10 +16,17 @@ class PaymentModeSummary(BaseModel):
 
 
 class DashboardSummary(BaseModel):
+    total_income: Decimal
     total_expenses: Decimal
-    this_month: Decimal
-    today: Decimal
-    average_daily: Decimal
+    balance: Decimal
+
+    income_this_month: Decimal
+    expenses_this_month: Decimal
+
+    income_today: Decimal
+    expenses_today: Decimal
+
+    average_daily_expense: Decimal
 
 
 class DashboardResponse(BaseModel):
