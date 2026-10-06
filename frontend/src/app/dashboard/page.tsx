@@ -7,24 +7,24 @@ import AddExpenseModal from "@/app/expenses/AddExpenseModal";
 import { apiRequest } from "@/app/lib/api";
 import Sidebar from "@/components/Sidebar/Sidebar";
 
-type User = {
-  id: string;
-  name: string;
-  email: string;
-};
-
 type DashboardResponse = {
   summary: {
+    total_income: number | string;
     total_expenses: number | string;
-    this_month: number | string;
-    today: number | string;
-    average_daily: number | string;
+    balance: number | string;
+    income_this_month: number | string;
+    expenses_this_month: number | string;
+    income_today: number | string;
+    expenses_today: number | string;
+    average_daily_expense: number | string;
   };
+
   categories: {
     category: string;
     amount: number | string;
     percentage: number;
   }[];
+
   payment_modes: {
     payment_mode: string;
     amount: number | string;
@@ -58,8 +58,8 @@ export default function DashboardPage() {
 
   const [showAddExpense, setShowAddExpense] = useState(false);
 
-  const [user, setUser] = useState<User | null>(null);
   const [dashboard, setDashboard] = useState<DashboardResponse | null>(null);
+
   const [recentExpenses, setRecentExpenses] = useState<Expense[]>([]);
 
   const [loading, setLoading] = useState(true);
@@ -69,7 +69,7 @@ export default function DashboardPage() {
     const token = localStorage.getItem("access_token");
 
     if (!token) {
-      router.push("/login");
+      router.replace("/login");
       return;
     }
 
@@ -81,11 +81,7 @@ export default function DashboardPage() {
         Authorization: `Bearer ${token}`,
       };
 
-      const [userData, dashboardData, expensesData] = await Promise.all([
-        apiRequest<User>("/auth/me", {
-          headers: authHeaders,
-        }),
-
+      const [dashboardData, expensesData] = await Promise.all([
         apiRequest<DashboardResponse>("/dashboard", {
           headers: authHeaders,
         }),
@@ -95,7 +91,6 @@ export default function DashboardPage() {
         }),
       ]);
 
-      setUser(userData);
       setDashboard(dashboardData);
 
       const sortedExpenses = [...expensesData]
@@ -110,13 +105,18 @@ export default function DashboardPage() {
     } catch (error) {
       console.error("Failed to load dashboard:", error);
 
-      localStorage.removeItem("access_token");
+      if (
+        error instanceof Error &&
+        error.message === "AUTHENTICATION_REQUIRED"
+      ) {
+        localStorage.removeItem("access_token");
+        router.replace("/login");
+        return;
+      }
 
       setError(
         error instanceof Error ? error.message : "Unable to load dashboard",
       );
-
-      router.push("/login");
     } finally {
       setLoading(false);
     }
@@ -128,64 +128,58 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-100">
-        <div className="text-center">
-          <p className="font-primary text-label font-medium text-zinc-700">
-            Loading dashboard...
-          </p>
-
-          <p className="mt-1 font-primary text-caption text-zinc-400">
-            Fetching your financial data
-          </p>
-        </div>
-      </main>
+      <div className="flex min-h-screen items-center justify-center bg-zinc-100">
+        <p className="text-sm text-zinc-500">Loading dashboard...</p>
+      </div>
     );
   }
 
   if (error || !dashboard) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-zinc-100 px-4">
-        <div className="w-full max-w-md rounded-xl border border-zinc-200 bg-white p-6 text-center">
-          <h1 className="font-heading text-section-title font-semibold text-zinc-900">
+      <div className="flex min-h-screen items-center justify-center bg-zinc-100">
+        <div className="text-center">
+          <h1 className="text-lg font-semibold text-zinc-900">
             Unable to load dashboard
           </h1>
 
-          <p className="mt-2 font-primary text-label text-zinc-500">
+          <p className="mt-2 text-sm text-zinc-500">
             {error || "Something went wrong."}
           </p>
 
           <button
             type="button"
-            onClick={() => router.push("/login")}
-            className="mt-5 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
+            onClick={loadDashboard}
+            className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
           >
-            Go to Login
+            Try Again
           </button>
         </div>
-      </main>
+      </div>
     );
   }
 
+  const { summary } = dashboard;
+
   const summaryCards = [
     {
-      title: "Total Expenses",
-      value: formatCurrency(dashboard.summary.total_expenses),
+      title: "Total Income",
+      value: formatCurrency(summary.total_income),
       description: "All time",
     },
     {
+      title: "Total Expenses",
+      value: formatCurrency(summary.total_expenses),
+      description: "All time",
+    },
+    {
+      title: "Balance",
+      value: formatCurrency(summary.balance),
+      description: "Income - Expenses",
+    },
+    {
       title: "This Month",
-      value: formatCurrency(dashboard.summary.this_month),
-      description: "This month",
-    },
-    {
-      title: "Today",
-      value: formatCurrency(dashboard.summary.today),
-      description: "Today",
-    },
-    {
-      title: "Average Daily",
-      value: formatCurrency(dashboard.summary.average_daily),
-      description: "This month",
+      value: formatCurrency(summary.expenses_this_month),
+      description: "Expenses this month",
     },
   ];
 
@@ -194,22 +188,21 @@ export default function DashboardPage() {
       <Sidebar />
 
       <main className="lg:ml-64">
-        <header className="border-b border-zinc-200 bg-white">
-          <div className="flex h-20 items-center justify-between px-6 lg:px-8">
+        {/* Header */}
+        <header className="border-b border-zinc-200 bg-white px-6 py-5 lg:px-8">
+          <div className="flex items-center justify-between">
             <div>
-              <h2 className="font-heading text-page-title font-bold text-zinc-900">
-                Dashboard
-              </h2>
+              <h1 className="text-2xl font-bold text-zinc-900">Dashboard</h1>
 
-              <p className="font-primary text-label text-zinc-500">
-                Here's an overview of your spending.
+              <p className="mt-1 text-sm text-zinc-500">
+                Here’s an overview of your finances.
               </p>
             </div>
 
             <button
               type="button"
               onClick={() => setShowAddExpense(true)}
-              className="rounded-lg bg-zinc-900 px-4 py-2.5 font-primary text-label font-medium text-white transition hover:bg-zinc-800"
+              className="rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800"
             >
               + Add Expense
             </button>
@@ -217,53 +210,108 @@ export default function DashboardPage() {
         </header>
 
         <div className="space-y-6 p-6 lg:p-8">
-          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {/* Summary Cards */}
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {summaryCards.map((card) => (
               <div
                 key={card.title}
                 className="rounded-xl border border-zinc-200 bg-white p-5"
               >
-                <p className="font-primary text-label font-medium text-zinc-500">
+                <p className="text-sm font-medium text-zinc-500">
                   {card.title}
                 </p>
 
-                <p className="mt-2 font-heading text-card-value font-bold text-zinc-900">
+                <p className="mt-2 text-2xl font-bold text-zinc-900">
                   {card.value}
                 </p>
 
-                <p className="mt-1 font-primary text-caption text-zinc-400">
-                  {card.description}
-                </p>
+                <p className="mt-1 text-xs text-zinc-400">{card.description}</p>
               </div>
             ))}
           </section>
 
-          <section className="grid gap-6 xl:grid-cols-2">
-            <div className="rounded-xl border border-zinc-200 bg-white p-6">
-              <div className="mb-6">
-                <h3 className="font-heading text-section-title font-semibold text-zinc-900">
-                  Spending by Category
-                </h3>
+          {/* Monthly Overview */}
+          <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            <div className="rounded-xl border border-zinc-200 bg-white p-5">
+              <p className="text-sm font-medium text-zinc-500">
+                Income This Month
+              </p>
 
-                <p className="font-primary text-label text-zinc-500">
-                  Where your money is going this month.
+              <p className="mt-2 text-xl font-bold text-zinc-900">
+                {formatCurrency(summary.income_this_month)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-zinc-200 bg-white p-5">
+              <p className="text-sm font-medium text-zinc-500">
+                Expenses This Month
+              </p>
+
+              <p className="mt-2 text-xl font-bold text-zinc-900">
+                {formatCurrency(summary.expenses_this_month)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-zinc-200 bg-white p-5">
+              <p className="text-sm font-medium text-zinc-500">
+                Average Daily Expense
+              </p>
+
+              <p className="mt-2 text-xl font-bold text-zinc-900">
+                {formatCurrency(summary.average_daily_expense)}
+              </p>
+            </div>
+          </section>
+
+          {/* Today */}
+          <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="rounded-xl border border-zinc-200 bg-white p-5">
+              <p className="text-sm font-medium text-zinc-500">Income Today</p>
+
+              <p className="mt-2 text-xl font-bold text-zinc-900">
+                {formatCurrency(summary.income_today)}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-zinc-200 bg-white p-5">
+              <p className="text-sm font-medium text-zinc-500">
+                Expenses Today
+              </p>
+
+              <p className="mt-2 text-xl font-bold text-zinc-900">
+                {formatCurrency(summary.expenses_today)}
+              </p>
+            </div>
+          </section>
+
+          {/* Category + Payment */}
+          <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            {/* Categories */}
+            <div className="rounded-xl border border-zinc-200 bg-white p-6">
+              <div className="mb-5">
+                <h2 className="text-lg font-semibold text-zinc-900">
+                  Spending by Category
+                </h2>
+
+                <p className="mt-1 text-sm text-zinc-500">
+                  Your expense distribution
                 </p>
               </div>
 
-              <div className="space-y-5">
-                {dashboard.categories.length === 0 ? (
-                  <p className="font-primary text-label text-zinc-400">
-                    No expenses recorded yet.
-                  </p>
-                ) : (
-                  dashboard.categories.map((item) => (
+              {dashboard.categories.length === 0 ? (
+                <p className="text-sm text-zinc-500">
+                  No expense data available.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {dashboard.categories.map((item) => (
                     <div key={item.category}>
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="font-primary text-label font-medium text-zinc-700">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-sm text-zinc-700">
                           {item.category}
                         </span>
 
-                        <span className="font-primary text-label text-zinc-500">
+                        <span className="text-sm font-medium text-zinc-900">
                           {formatCurrency(item.amount)}
                         </span>
                       </div>
@@ -277,102 +325,100 @@ export default function DashboardPage() {
                         />
                       </div>
 
-                      <p className="mt-1 text-right font-primary text-caption text-zinc-400">
+                      <p className="mt-1 text-xs text-zinc-400">
                         {item.percentage}%
                       </p>
                     </div>
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
 
+            {/* Payment Modes */}
             <div className="rounded-xl border border-zinc-200 bg-white p-6">
-              <div className="mb-6">
-                <h3 className="font-heading text-section-title font-semibold text-zinc-900">
+              <div className="mb-5">
+                <h2 className="text-lg font-semibold text-zinc-900">
                   Spending by Payment Method
-                </h3>
+                </h2>
 
-                <p className="font-primary text-label text-zinc-500">
-                  How you are paying for your expenses.
-                </p>
+                <p className="mt-1 text-sm text-zinc-500">How you are paying</p>
               </div>
 
-              <div className="space-y-5">
-                {dashboard.payment_modes.length === 0 ? (
-                  <p className="font-primary text-label text-zinc-400">
-                    No expenses recorded yet.
-                  </p>
-                ) : (
-                  dashboard.payment_modes.map((item) => (
+              {dashboard.payment_modes.length === 0 ? (
+                <p className="text-sm text-zinc-500">
+                  No payment data available.
+                </p>
+              ) : (
+                <div className="space-y-4">
+                  {dashboard.payment_modes.map((item) => (
                     <div key={item.payment_mode}>
-                      <div className="mb-2 flex items-center justify-between">
-                        <span className="font-primary text-label font-medium text-zinc-700">
+                      <div className="mb-1 flex items-center justify-between">
+                        <span className="text-sm text-zinc-700">
                           {item.payment_mode}
                         </span>
 
-                        <span className="font-primary text-label text-zinc-500">
+                        <span className="text-sm font-medium text-zinc-900">
                           {formatCurrency(item.amount)}
                         </span>
                       </div>
 
                       <div className="h-2 overflow-hidden rounded-full bg-zinc-100">
                         <div
-                          className="h-full rounded-full bg-zinc-700"
+                          className="h-full rounded-full bg-zinc-900"
                           style={{
                             width: `${item.percentage}%`,
                           }}
                         />
                       </div>
 
-                      <p className="mt-1 text-right font-primary text-caption text-zinc-400">
+                      <p className="mt-1 text-xs text-zinc-400">
                         {item.percentage}%
                       </p>
                     </div>
-                  ))
-                )}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </section>
 
+          {/* Recent Expenses */}
           <section className="rounded-xl border border-zinc-200 bg-white">
-            <div className="flex items-center justify-between border-b border-zinc-200 p-6">
-              <div>
-                <h3 className="font-heading text-section-title font-semibold text-zinc-900">
-                  Recent Expenses
-                </h3>
+            <div className="border-b border-zinc-200 p-6">
+              <h2 className="text-lg font-semibold text-zinc-900">
+                Recent Expenses
+              </h2>
 
-                <p className="font-primary text-label text-zinc-500">
-                  Your latest transactions.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowAddExpense(true)}
-                className="font-primary text-label font-medium text-zinc-900 hover:underline"
-              >
-                Add expense
-              </button>
+              <p className="mt-1 text-sm text-zinc-500">
+                Your latest transactions
+              </p>
             </div>
 
-            <div className="overflow-x-auto">
-              {recentExpenses.length === 0 ? (
-                <div className="p-6 font-primary text-label text-zinc-400">
-                  No expenses recorded yet.
-                </div>
-              ) : (
-                <table className="w-full min-w-[700px] text-left">
+            {recentExpenses.length === 0 ? (
+              <div className="p-6 text-sm text-zinc-500">
+                No expenses recorded yet.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
                   <thead>
-                    <tr className="border-b border-zinc-200 font-primary text-caption uppercase tracking-wide text-zinc-400">
-                      <th className="px-6 py-4 font-medium">Category</th>
+                    <tr className="border-b border-zinc-200 text-left">
+                      <th className="px-6 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                        Category
+                      </th>
 
-                      <th className="px-6 py-4 font-medium">Note</th>
+                      <th className="px-6 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                        Note
+                      </th>
 
-                      <th className="px-6 py-4 font-medium">Payment</th>
+                      <th className="px-6 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                        Payment
+                      </th>
 
-                      <th className="px-6 py-4 font-medium">Date</th>
+                      <th className="px-6 py-3 text-xs font-medium uppercase tracking-wide text-zinc-500">
+                        Date
+                      </th>
 
-                      <th className="px-6 py-4 text-right font-medium">
+                      <th className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wide text-zinc-500">
                         Amount
                       </th>
                     </tr>
@@ -384,31 +430,31 @@ export default function DashboardPage() {
                         key={expense.id}
                         className="border-b border-zinc-100 last:border-0"
                       >
-                        <td className="px-6 py-4 font-primary text-label font-medium text-zinc-900">
+                        <td className="px-6 py-4 text-sm font-medium text-zinc-900">
                           {expense.category}
                         </td>
 
-                        <td className="px-6 py-4 font-primary text-label text-zinc-600">
-                          {expense.note || "—"}
+                        <td className="px-6 py-4 text-sm text-zinc-500">
+                          {expense.note || "-"}
                         </td>
 
-                        <td className="px-6 py-4 font-primary text-label text-zinc-600">
+                        <td className="px-6 py-4 text-sm text-zinc-500">
                           {expense.payment_mode}
                         </td>
 
-                        <td className="px-6 py-4 font-primary text-label text-zinc-500">
+                        <td className="px-6 py-4 text-sm text-zinc-500">
                           {formatDate(expense.expense_date)}
                         </td>
 
-                        <td className="px-6 py-4 text-right font-primary text-label font-semibold text-zinc-900">
+                        <td className="px-6 py-4 text-right text-sm font-semibold text-zinc-900">
                           {formatCurrency(expense.amount)}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
-              )}
-            </div>
+              </div>
+            )}
           </section>
         </div>
       </main>

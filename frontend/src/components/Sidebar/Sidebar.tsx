@@ -21,6 +21,11 @@ const navigationItems = [
     href: "/expenses",
     icon: "▤",
   },
+  {
+    name: "Income",
+    href: "/income",
+    icon: "₹",
+  },
 ];
 
 export default function Sidebar() {
@@ -125,6 +130,7 @@ export default function Sidebar() {
                 }`}
               >
                 <span>{item.icon}</span>
+
                 <span>{item.name}</span>
               </button>
             );
