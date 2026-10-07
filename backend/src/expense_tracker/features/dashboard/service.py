@@ -7,49 +7,27 @@ from expense_tracker.features.expense.model import Expense
 from expense_tracker.features.income.model import Income
 
 
-async def get_dashboard_data(user_id: PydanticObjectId):
+async def get_dashboard_data(
+    user_id: PydanticObjectId,
+):
     today = datetime.now(timezone.utc).date()
     start_of_month = today.replace(day=1)
 
-    # ---------------------------------------------------------
-    # Fetch expenses and incomes
-    # ---------------------------------------------------------
-
-    expenses = await Expense.find(
-        Expense.user_id == user_id
-    ).to_list()
+    # --------------------------------------------------
+    # Fetch user's transactions
+    # --------------------------------------------------
 
     incomes = await Income.find(
-        Income.user_id == user_id
+        Income.user_id == user_id,
     ).to_list()
 
-    # ---------------------------------------------------------
-    # Total income
-    # ---------------------------------------------------------
+    expenses = await Expense.find(
+        Expense.user_id == user_id,
+    ).to_list()
 
-    total_income = sum(
-        (income.amount for income in incomes),
-        Decimal("0"),
-    )
-
-    # ---------------------------------------------------------
-    # Total expenses
-    # ---------------------------------------------------------
-
-    total_expenses = sum(
-        (expense.amount for expense in expenses),
-        Decimal("0"),
-    )
-
-    # ---------------------------------------------------------
-    # Balance
-    # ---------------------------------------------------------
-
-    balance = total_income - total_expenses
-
-    # ---------------------------------------------------------
-    # This month
-    # ---------------------------------------------------------
+    # --------------------------------------------------
+    # Filter current month
+    # --------------------------------------------------
 
     this_month_incomes = [
         income
@@ -63,65 +41,44 @@ async def get_dashboard_data(user_id: PydanticObjectId):
         if start_of_month <= expense.expense_date <= today
     ]
 
+    # --------------------------------------------------
+    # Monthly totals
+    # --------------------------------------------------
+
     income_this_month = sum(
-        (income.amount for income in this_month_incomes),
+        (
+            income.amount
+            for income in this_month_incomes
+        ),
         Decimal("0"),
     )
 
     expenses_this_month = sum(
-        (expense.amount for expense in this_month_expenses),
+        (
+            expense.amount
+            for expense in this_month_expenses
+        ),
         Decimal("0"),
     )
 
-    # ---------------------------------------------------------
-    # Today
-    # ---------------------------------------------------------
-
-    today_incomes = [
-        income
-        for income in incomes
-        if income.income_date == today
-    ]
-
-    today_expenses = [
-        expense
-        for expense in expenses
-        if expense.expense_date == today
-    ]
-
-    income_today = sum(
-        (income.amount for income in today_incomes),
-        Decimal("0"),
+    balance_this_month = (
+        income_this_month - expenses_this_month
     )
 
-    expenses_today = sum(
-        (expense.amount for expense in today_expenses),
-        Decimal("0"),
-    )
-
-    # ---------------------------------------------------------
-    # Average daily expense
-    # ---------------------------------------------------------
-
-    days_elapsed = today.day
-
-    average_daily_expense = (
-        expenses_this_month / Decimal(days_elapsed)
-        if days_elapsed > 0
-        else Decimal("0")
-    )
-
-    # ---------------------------------------------------------
-    # Category totals
-    # ---------------------------------------------------------
+    # --------------------------------------------------
+    # Spending by category
+    # --------------------------------------------------
 
     category_totals: dict[str, Decimal] = {}
 
-    for expense in expenses:
+    for expense in this_month_expenses:
         category = expense.category.value
 
         category_totals[category] = (
-            category_totals.get(category, Decimal("0"))
+            category_totals.get(
+                category,
+                Decimal("0"),
+            )
             + expense.amount
         )
 
@@ -129,8 +86,10 @@ async def get_dashboard_data(user_id: PydanticObjectId):
 
     for category, amount in category_totals.items():
         percentage = (
-            float((amount / total_expenses) * 100)
-            if total_expenses > 0
+            float(
+                (amount / expenses_this_month) * 100
+            )
+            if expenses_this_month > 0
             else 0.0
         )
 
@@ -138,7 +97,10 @@ async def get_dashboard_data(user_id: PydanticObjectId):
             {
                 "category": category,
                 "amount": amount,
-                "percentage": round(percentage, 2),
+                "percentage": round(
+                    percentage,
+                    2,
+                ),
             }
         )
 
@@ -147,17 +109,20 @@ async def get_dashboard_data(user_id: PydanticObjectId):
         reverse=True,
     )
 
-    # ---------------------------------------------------------
-    # Payment mode totals
-    # ---------------------------------------------------------
+    # --------------------------------------------------
+    # Spending by payment mode
+    # --------------------------------------------------
 
     payment_mode_totals: dict[str, Decimal] = {}
 
-    for expense in expenses:
+    for expense in this_month_expenses:
         payment_mode = expense.payment_mode.value
 
         payment_mode_totals[payment_mode] = (
-            payment_mode_totals.get(payment_mode, Decimal("0"))
+            payment_mode_totals.get(
+                payment_mode,
+                Decimal("0"),
+            )
             + expense.amount
         )
 
@@ -165,8 +130,10 @@ async def get_dashboard_data(user_id: PydanticObjectId):
 
     for payment_mode, amount in payment_mode_totals.items():
         percentage = (
-            float((amount / total_expenses) * 100)
-            if total_expenses > 0
+            float(
+                (amount / expenses_this_month) * 100
+            )
+            if expenses_this_month > 0
             else 0.0
         )
 
@@ -174,7 +141,10 @@ async def get_dashboard_data(user_id: PydanticObjectId):
             {
                 "payment_mode": payment_mode,
                 "amount": amount,
-                "percentage": round(percentage, 2),
+                "percentage": round(
+                    percentage,
+                    2,
+                ),
             }
         )
 
@@ -183,20 +153,15 @@ async def get_dashboard_data(user_id: PydanticObjectId):
         reverse=True,
     )
 
-    # ---------------------------------------------------------
-    # Response
-    # ---------------------------------------------------------
+    # --------------------------------------------------
+    # Dashboard response
+    # --------------------------------------------------
 
     return {
         "summary": {
-            "total_income": total_income,
-            "total_expenses": total_expenses,
-            "balance": balance,
             "income_this_month": income_this_month,
             "expenses_this_month": expenses_this_month,
-            "income_today": income_today,
-            "expenses_today": expenses_today,
-            "average_daily_expense": average_daily_expense,
+            "balance_this_month": balance_this_month,
         },
         "categories": categories,
         "payment_modes": payment_modes,

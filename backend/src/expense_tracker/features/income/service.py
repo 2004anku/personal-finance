@@ -82,12 +82,13 @@ async def create_income(
     data: IncomeCreate,
 ) -> Income:
     income = Income(
-        user_id=user_id,
-        amount=data.amount,
-        source=data.source,
-        note=data.note,
-        income_date=data.income_date,
-    )
+    user_id=user_id,
+    amount=data.amount,
+    source=data.source,
+    payment_mode=data.payment_mode,
+    note=data.note,
+    income_date=data.income_date,
+)
 
     await income.insert()
 

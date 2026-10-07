@@ -16,12 +16,19 @@ class IncomeSource(str, Enum):
     OTHER = "Other"
 
 
+class IncomePaymentMode(str, Enum):
+    UPI = "UPI"
+    CASH = "Cash"
+
+
 class Income(Document):
     user_id: PydanticObjectId
 
     amount: Decimal = Field(gt=0)
 
     source: IncomeSource
+
+    payment_mode: IncomePaymentMode
 
     note: str | None = Field(
         default=None,
