@@ -9,14 +9,9 @@ import Sidebar from "@/components/Sidebar/Sidebar";
 
 type DashboardResponse = {
   summary: {
-    total_income: number | string;
-    total_expenses: number | string;
-    balance: number | string;
     income_this_month: number | string;
     expenses_this_month: number | string;
-    income_today: number | string;
-    expenses_today: number | string;
-    average_daily_expense: number | string;
+    balance_this_month: number | string;
   };
 
   categories: {
@@ -86,7 +81,7 @@ export default function DashboardPage() {
           headers: authHeaders,
         }),
 
-        apiRequest<Expense[]>("/expenses", {
+        apiRequest<Expense[]>("/expenses?date_range=this_month", {
           headers: authHeaders,
         }),
       ]);
@@ -149,7 +144,7 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={loadDashboard}
-            className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+            className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
           >
             Try Again
           </button>
@@ -162,24 +157,16 @@ export default function DashboardPage() {
 
   const summaryCards = [
     {
-      title: "Total Income",
-      value: formatCurrency(summary.total_income),
-      description: "All time",
+      title: "Income",
+      value: formatCurrency(summary.income_this_month),
     },
     {
-      title: "Total Expenses",
-      value: formatCurrency(summary.total_expenses),
-      description: "All time",
+      title: "Expenses",
+      value: formatCurrency(summary.expenses_this_month),
     },
     {
       title: "Balance",
-      value: formatCurrency(summary.balance),
-      description: "Income - Expenses",
-    },
-    {
-      title: "This Month",
-      value: formatCurrency(summary.expenses_this_month),
-      description: "Expenses this month",
+      value: formatCurrency(summary.balance_this_month),
     },
   ];
 
@@ -195,7 +182,7 @@ export default function DashboardPage() {
               <h1 className="text-2xl font-bold text-zinc-900">Dashboard</h1>
 
               <p className="mt-1 text-sm text-zinc-500">
-                Here’s an overview of your finances.
+                Here’s an overview of your finances this month.
               </p>
             </div>
 
@@ -210,8 +197,8 @@ export default function DashboardPage() {
         </header>
 
         <div className="space-y-6 p-6 lg:p-8">
-          {/* Summary Cards */}
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {/* Monthly Summary */}
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {summaryCards.map((card) => (
               <div
                 key={card.title}
@@ -225,63 +212,9 @@ export default function DashboardPage() {
                   {card.value}
                 </p>
 
-                <p className="mt-1 text-xs text-zinc-400">{card.description}</p>
+                <p className="mt-1 text-xs text-zinc-400">This month</p>
               </div>
             ))}
-          </section>
-
-          {/* Monthly Overview */}
-          <section className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <div className="rounded-xl border border-zinc-200 bg-white p-5">
-              <p className="text-sm font-medium text-zinc-500">
-                Income This Month
-              </p>
-
-              <p className="mt-2 text-xl font-bold text-zinc-900">
-                {formatCurrency(summary.income_this_month)}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-zinc-200 bg-white p-5">
-              <p className="text-sm font-medium text-zinc-500">
-                Expenses This Month
-              </p>
-
-              <p className="mt-2 text-xl font-bold text-zinc-900">
-                {formatCurrency(summary.expenses_this_month)}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-zinc-200 bg-white p-5">
-              <p className="text-sm font-medium text-zinc-500">
-                Average Daily Expense
-              </p>
-
-              <p className="mt-2 text-xl font-bold text-zinc-900">
-                {formatCurrency(summary.average_daily_expense)}
-              </p>
-            </div>
-          </section>
-
-          {/* Today */}
-          <section className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            <div className="rounded-xl border border-zinc-200 bg-white p-5">
-              <p className="text-sm font-medium text-zinc-500">Income Today</p>
-
-              <p className="mt-2 text-xl font-bold text-zinc-900">
-                {formatCurrency(summary.income_today)}
-              </p>
-            </div>
-
-            <div className="rounded-xl border border-zinc-200 bg-white p-5">
-              <p className="text-sm font-medium text-zinc-500">
-                Expenses Today
-              </p>
-
-              <p className="mt-2 text-xl font-bold text-zinc-900">
-                {formatCurrency(summary.expenses_today)}
-              </p>
-            </div>
           </section>
 
           {/* Category + Payment */}
@@ -294,13 +227,13 @@ export default function DashboardPage() {
                 </h2>
 
                 <p className="mt-1 text-sm text-zinc-500">
-                  Your expense distribution
+                  This month’s expense distribution
                 </p>
               </div>
 
               {dashboard.categories.length === 0 ? (
                 <p className="text-sm text-zinc-500">
-                  No expense data available.
+                  No expenses recorded this month.
                 </p>
               ) : (
                 <div className="space-y-4">
@@ -341,12 +274,14 @@ export default function DashboardPage() {
                   Spending by Payment Method
                 </h2>
 
-                <p className="mt-1 text-sm text-zinc-500">How you are paying</p>
+                <p className="mt-1 text-sm text-zinc-500">
+                  This month’s payment distribution
+                </p>
               </div>
 
               {dashboard.payment_modes.length === 0 ? (
                 <p className="text-sm text-zinc-500">
-                  No payment data available.
+                  No payment data available this month.
                 </p>
               ) : (
                 <div className="space-y-4">
@@ -389,13 +324,13 @@ export default function DashboardPage() {
               </h2>
 
               <p className="mt-1 text-sm text-zinc-500">
-                Your latest transactions
+                Your latest expenses this month
               </p>
             </div>
 
             {recentExpenses.length === 0 ? (
               <div className="p-6 text-sm text-zinc-500">
-                No expenses recorded yet.
+                No expenses recorded this month.
               </div>
             ) : (
               <div className="overflow-x-auto">

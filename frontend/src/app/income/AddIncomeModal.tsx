@@ -8,6 +8,7 @@ type Income = {
   id: string;
   amount: number | string;
   source: string;
+  payment_mode: IncomePaymentMode;
   note: string | null;
   income_date: string;
 };
@@ -19,6 +20,8 @@ type AddIncomeModalProps = {
   income?: Income | null;
 };
 
+type IncomePaymentMode = "UPI" | "Cash";
+
 const incomeSources = [
   "Salary",
   "Freelance",
@@ -27,6 +30,8 @@ const incomeSources = [
   "Gift",
   "Other",
 ];
+
+const incomePaymentModes: IncomePaymentMode[] = ["UPI", "Cash"];
 
 function getTodayDate() {
   const today = new Date();
@@ -50,7 +55,7 @@ export default function AddIncomeModal({
   const [source, setSource] = useState("Salary");
   const [incomeDate, setIncomeDate] = useState(getTodayDate());
   const [note, setNote] = useState("");
-
+  const [paymentMode, setPaymentMode] = useState<IncomePaymentMode>("UPI");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -62,11 +67,13 @@ export default function AddIncomeModal({
     if (income) {
       setAmount(String(income.amount));
       setSource(income.source);
+      setPaymentMode(income.payment_mode);
       setIncomeDate(income.income_date);
       setNote(income.note || "");
     } else {
       setAmount("");
       setSource("Salary");
+      setPaymentMode("UPI");
       setIncomeDate(getTodayDate());
       setNote("");
     }
@@ -113,6 +120,7 @@ export default function AddIncomeModal({
       const payload = {
         amount: Number(amount),
         source,
+        payment_mode: paymentMode,
         note: note.trim() || null,
         income_date: incomeDate,
       };
@@ -244,6 +252,32 @@ export default function AddIncomeModal({
               className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 font-primary text-body text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
             >
               {incomeSources.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Payment Mode */}
+          <div>
+            <label
+              htmlFor="incomePaymentMode"
+              className="mb-2 block font-primary text-body font-medium text-zinc-700"
+            >
+              Payment Mode
+            </label>
+
+            <select
+              id="incomePaymentMode"
+              value={paymentMode}
+              onChange={(event) =>
+                setPaymentMode(event.target.value as IncomePaymentMode)
+              }
+              disabled={isSubmitting}
+              className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2.5 font-primary text-body text-zinc-900 outline-none transition focus:border-zinc-400 focus:ring-2 focus:ring-zinc-100 disabled:bg-zinc-50"
+            >
+              {incomePaymentModes.map((item) => (
                 <option key={item} value={item}>
                   {item}
                 </option>
