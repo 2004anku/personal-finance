@@ -3,15 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { apiRequest } from "@/app/lib/api";
-
-type Income = {
-  id: string;
-  amount: number | string;
-  source: string;
-  payment_mode: IncomePaymentMode;
-  note: string | null;
-  income_date: string;
-};
+import type { Income, IncomePaymentMode } from "@/app/income/types";
 
 type AddIncomeModalProps = {
   isOpen: boolean;
@@ -19,8 +11,6 @@ type AddIncomeModalProps = {
   onIncomeAdded: () => void;
   income?: Income | null;
 };
-
-type IncomePaymentMode = "UPI" | "Cash";
 
 const incomeSources = [
   "Salary",

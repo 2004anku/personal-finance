@@ -1,7 +1,7 @@
 "use client";
-
+import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
-import { apiRequest } from "@/app/lib/api";
+import axiosInstance from "@/app/lib/axios";
 
 type Expense = {
   id: string;
@@ -15,7 +15,7 @@ type Expense = {
 type AddExpenseModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onExpenseAdded: () => void;
+  onExpenseAdded: () => void | Promise<void>;
   expense?: Expense | null;
 };
 
@@ -34,12 +34,29 @@ const paymentModes = ["Cash", "UPI", "Card", "Bank Transfer", "Other"];
 
 function getTodayDate() {
   const today = new Date();
-
   const year = today.getFullYear();
   const month = String(today.getMonth() + 1).padStart(2, "0");
   const day = String(today.getDate()).padStart(2, "0");
 
   return `${year}-${month}-${day}`;
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (isAxiosError(error)) {
+    if (error.response?.status === 401) {
+      return "Your session has expired. Please log in again.";
+    }
+
+    const detail: unknown = error.response?.data?.detail;
+
+    if (typeof detail === "string") {
+      return detail;
+    }
+
+    return fallback;
+  }
+
+  return error instanceof Error ? error.message : fallback;
 }
 
 export default function AddExpenseModal({
@@ -55,14 +72,11 @@ export default function AddExpenseModal({
   const [paymentMode, setPaymentMode] = useState("UPI");
   const [expenseDate, setExpenseDate] = useState(getTodayDate());
   const [note, setNote] = useState("");
-
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen) return;
 
     if (expense) {
       setAmount(String(expense.amount));
@@ -82,9 +96,7 @@ export default function AddExpenseModal({
   }, [isOpen, expense]);
 
   useEffect(() => {
-    if (!isOpen) {
-      return;
-    }
+    if (!isOpen) return;
 
     function handleEscape(event: KeyboardEvent) {
       if (event.key === "Escape" && !isSubmitting) {
@@ -99,9 +111,7 @@ export default function AddExpenseModal({
     };
   }, [isOpen, isSubmitting, onClose]);
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -109,7 +119,14 @@ export default function AddExpenseModal({
     const token = localStorage.getItem("access_token");
 
     if (!token) {
-      setError("Your session has expired. Please login again.");
+      setError("Your session has expired. Please log in again.");
+      return;
+    }
+
+    const numericAmount = Number(amount);
+
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setError("Please enter an amount greater than zero.");
       return;
     }
 
@@ -118,7 +135,7 @@ export default function AddExpenseModal({
       setError("");
 
       const payload = {
-        amount: Number(amount),
+        amount: numericAmount,
         category,
         note: note.trim() || null,
         payment_mode: paymentMode,
@@ -126,37 +143,26 @@ export default function AddExpenseModal({
       };
 
       if (isEditMode && expense) {
-        await apiRequest(`/expenses/${expense.id}`, {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        });
+        await axiosInstance.put(`/expenses/${expense.id}`, payload);
       } else {
-        await apiRequest("/expenses", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(payload),
-        });
+        await axiosInstance.post("/expenses", payload);
       }
 
+      await onExpenseAdded();
       onClose();
-      onExpenseAdded();
-    } catch (error) {
+    } catch (submitError) {
       console.error(
         isEditMode ? "Failed to update expense:" : "Failed to add expense:",
-        error,
+        submitError,
       );
 
       setError(
-        error instanceof Error
-          ? error.message
-          : isEditMode
+        getErrorMessage(
+          submitError,
+          isEditMode
             ? "Unable to update expense. Please try again."
             : "Unable to add expense. Please try again.",
+        ),
       );
     } finally {
       setIsSubmitting(false);

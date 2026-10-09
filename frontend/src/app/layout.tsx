@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
+import Providers from "@/app/lib/tanstack/providers";
+import { GlobalLoaderProvider } from "@/components/GlobalLoader/GlobalLoaderProvider";
+
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
@@ -15,7 +18,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <GlobalLoaderProvider>
+          <Providers>{children}</Providers>
+        </GlobalLoaderProvider>
+      </body>
     </html>
   );
 }

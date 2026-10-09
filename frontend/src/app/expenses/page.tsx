@@ -1,10 +1,11 @@
 "use client";
-
+import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import axiosInstance from "@/app/lib/axios";
+import { queryKeys } from "@/app/lib/tanstack/query-keys";
 import AddExpenseModal from "@/app/expenses/AddExpenseModal";
-import { apiRequest } from "@/app/lib/api";
 import Sidebar from "@/components/Sidebar/Sidebar";
 
 type Expense = {
@@ -18,26 +19,11 @@ type Expense = {
 
 type ExpenseDateRange = "all" | "this_month" | "last_6_months" | "last_year";
 
-const FILTER_OPTIONS: {
-  value: ExpenseDateRange;
-  label: string;
-}[] = [
-  {
-    value: "all",
-    label: "All",
-  },
-  {
-    value: "this_month",
-    label: "This Month",
-  },
-  {
-    value: "last_6_months",
-    label: "Last 6 Months",
-  },
-  {
-    value: "last_year",
-    label: "Last 1 Year",
-  },
+const FILTER_OPTIONS: { value: ExpenseDateRange; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "this_month", label: "This Month" },
+  { value: "last_6_months", label: "Last 6 Months" },
+  { value: "last_year", label: "Last 1 Year" },
 ];
 
 function formatCurrency(value: number | string) {
@@ -52,112 +38,157 @@ function formatDate(date: string) {
   });
 }
 
+function isAuthenticationError(error: unknown): boolean {
+  return (
+    (error instanceof Error && error.message === "AUTHENTICATION_REQUIRED") ||
+    (isAxiosError(error) && error.response?.status === 401)
+  );
+}
+
 export default function ExpensesPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
-  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [showAddExpense, setShowAddExpense] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deletingExpenseId, setDeletingExpenseId] = useState<string | null>(
     null,
   );
-
   const [showFilter, setShowFilter] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<ExpenseDateRange>("all");
-
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  async function loadExpenses(dateRange: ExpenseDateRange = selectedFilter) {
-    const token = localStorage.getItem("access_token");
+  const {
+    data: expenses = [],
+    isPending: loading,
+    isError,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.expenses.list(selectedFilter),
+    queryFn: async () => {
+      const token = localStorage.getItem("access_token");
 
-    if (!token) {
-      router.push("/login");
-      return;
-    }
+      if (!token) {
+        throw new Error("AUTHENTICATION_REQUIRED");
+      }
 
-    try {
-      setLoading(true);
-      setError("");
-
-      const endpoint =
-        dateRange === "all" ? "/expenses" : `/expenses?date_range=${dateRange}`;
-
-      const data = await apiRequest<Expense[]>(endpoint, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const response = await axiosInstance.get<Expense[]>("/expenses", {
+        params:
+          selectedFilter === "all"
+            ? undefined
+            : {
+                date_range: selectedFilter,
+              },
       });
 
-      const sortedExpenses = [...data].sort(
+      return [...response.data].sort(
         (a, b) =>
           new Date(b.expense_date).getTime() -
           new Date(a.expense_date).getTime(),
       );
+    },
+    retry: (failureCount, error) =>
+      !isAuthenticationError(error) && failureCount < 1,
+  });
 
-      setExpenses(sortedExpenses);
-    } catch (error) {
-      console.error("Failed to load expenses:", error);
+  useEffect(() => {
+    if (isAuthenticationError(queryError)) {
+      localStorage.removeItem("access_token");
+      router.replace("/login");
+    }
+  }, [queryError, router]);
+
+  const deleteExpenseMutation = useMutation({
+    mutationFn: async (expenseId: string) => {
+      const token = localStorage.getItem("access_token");
+
+      if (!token) {
+        throw new Error("AUTHENTICATION_REQUIRED");
+      }
+
+      await axiosInstance.delete(`/expenses/${expenseId}`);
+    },
+    onMutate: (expenseId) => {
+      setDeletingExpenseId(expenseId);
+      setError("");
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.expenses.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }),
+      ]);
+    },
+    onError: (mutationError: unknown) => {
+      if (isAuthenticationError(mutationError)) {
+        localStorage.removeItem("access_token");
+        router.replace("/login");
+        return;
+      }
+
+      if (isAxiosError(mutationError)) {
+        const detail = mutationError.response?.data?.detail;
+
+        setError(
+          typeof detail === "string"
+            ? detail
+            : "Unable to delete expense. Please try again.",
+        );
+        return;
+      }
 
       setError(
-        error instanceof Error ? error.message : "Unable to load expenses.",
+        mutationError instanceof Error
+          ? mutationError.message
+          : "Unable to delete expense. Please try again.",
       );
-    } finally {
-      setLoading(false);
-    }
-  }
+    },
+    onSettled: () => {
+      setDeletingExpenseId(null);
+    },
+  });
 
   function handleFilterChange(dateRange: ExpenseDateRange) {
     setSelectedFilter(dateRange);
     setShowFilter(false);
-
-    loadExpenses(dateRange);
+    setError("");
   }
 
   async function handleDeleteExpense(expenseId: string) {
-    const token = localStorage.getItem("access_token");
-
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
     const confirmed = window.confirm(
       "Are you sure you want to delete this expense?",
     );
 
-    if (!confirmed) {
-      return;
-    }
+    if (!confirmed) return;
 
-    try {
-      setDeletingExpenseId(expenseId);
-      setError("");
-
-      await apiRequest(`/expenses/${expenseId}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      await loadExpenses();
-    } catch (error) {
-      console.error("Failed to delete expense:", error);
-
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Unable to delete expense. Please try again.",
-      );
-    } finally {
-      setDeletingExpenseId(null);
-    }
+    deleteExpenseMutation.mutate(expenseId);
   }
 
+  async function handleExpenseSaved() {
+    setShowAddExpense(false);
+    setEditingExpense(null);
+    setError("");
+
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.all }),
+      queryClient.invalidateQueries({ queryKey: queryKeys.dashboard }),
+    ]);
+  }
+
+  const displayError =
+    error ||
+    (isError
+      ? queryError instanceof Error
+        ? queryError.message
+        : "Unable to load expenses."
+      : "");
+
   useEffect(() => {
-    loadExpenses("all");
-  }, []);
+    if (isError && isAuthenticationError(queryError)) {
+      localStorage.removeItem("access_token");
+      router.replace("/login");
+    }
+  }, [isError, queryError, router]);
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900">
@@ -171,7 +202,6 @@ export default function ExpensesPage() {
                 <h2 className="font-heading text-page-title font-bold text-zinc-900">
                   Expenses
                 </h2>
-
                 <p className="font-primary text-label text-zinc-500">
                   Manage all your expenses.
                 </p>
@@ -193,7 +223,6 @@ export default function ExpensesPage() {
                 <h3 className="font-heading text-section-title font-semibold text-zinc-900">
                   All Expenses
                 </h3>
-
                 <p className="mt-1 font-primary text-label text-zinc-500">
                   Your complete expense history.
                 </p>
@@ -233,26 +262,26 @@ export default function ExpensesPage() {
                   <p className="font-primary text-label font-medium text-zinc-700">
                     Loading expenses...
                   </p>
-
                   <p className="mt-1 font-primary text-caption text-zinc-400">
                     Fetching your expense history
                   </p>
                 </div>
               )}
 
-              {!loading && error && (
+              {!loading && displayError && (
                 <div className="p-8 text-center">
                   <p className="font-primary text-label font-medium text-red-600">
                     Unable to load expenses
                   </p>
-
                   <p className="mt-1 font-primary text-label text-zinc-500">
-                    {error}
+                    {displayError}
                   </p>
-
                   <button
                     type="button"
-                    onClick={() => loadExpenses()}
+                    onClick={() => {
+                      setError("");
+                      void refetch();
+                    }}
                     className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
                   >
                     Try Again
@@ -260,16 +289,14 @@ export default function ExpensesPage() {
                 </div>
               )}
 
-              {!loading && !error && expenses.length === 0 && (
+              {!loading && !displayError && expenses.length === 0 && (
                 <div className="p-8 text-center">
                   <p className="font-primary text-label font-medium text-zinc-700">
                     No expenses found for this period.
                   </p>
-
                   <p className="mt-1 font-primary text-label text-zinc-400">
                     Try selecting a different date range.
                   </p>
-
                   <button
                     type="button"
                     onClick={() => setShowAddExpense(true)}
@@ -280,23 +307,18 @@ export default function ExpensesPage() {
                 </div>
               )}
 
-              {!loading && !error && expenses.length > 0 && (
+              {!loading && !displayError && expenses.length > 0 && (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[800px] text-left">
+                  <table className="w-full min-w-200 text-left">
                     <thead>
                       <tr className="border-b border-zinc-200 font-primary text-caption uppercase tracking-wide text-zinc-400">
                         <th className="px-6 py-4 font-medium">Category</th>
-
                         <th className="px-6 py-4 font-medium">Note</th>
-
                         <th className="px-6 py-4 font-medium">Payment</th>
-
                         <th className="px-6 py-4 font-medium">Date</th>
-
                         <th className="px-6 py-4 text-right font-medium">
                           Amount
                         </th>
-
                         <th className="px-6 py-4 text-right font-medium">
                           Actions
                         </th>
@@ -312,23 +334,18 @@ export default function ExpensesPage() {
                           <td className="px-6 py-4 font-primary text-label font-medium text-zinc-900">
                             {expense.category}
                           </td>
-
                           <td className="max-w-xs px-6 py-4 font-primary text-label text-zinc-600">
                             {expense.note || "—"}
                           </td>
-
                           <td className="px-6 py-4 font-primary text-label text-zinc-600">
                             {expense.payment_mode}
                           </td>
-
                           <td className="px-6 py-4 font-primary text-label text-zinc-500">
                             {formatDate(expense.expense_date)}
                           </td>
-
                           <td className="px-6 py-4 text-right font-primary text-label font-semibold text-zinc-900">
                             {formatCurrency(expense.amount)}
                           </td>
-
                           <td className="px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">
                               <button
@@ -338,10 +355,11 @@ export default function ExpensesPage() {
                               >
                                 Edit
                               </button>
-
                               <button
                                 type="button"
-                                onClick={() => handleDeleteExpense(expense.id)}
+                                onClick={() =>
+                                  void handleDeleteExpense(expense.id)
+                                }
                                 disabled={deletingExpenseId === expense.id}
                                 className="rounded-md px-3 py-1.5 font-primary text-caption font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                               >
@@ -368,7 +386,7 @@ export default function ExpensesPage() {
           setShowAddExpense(false);
           setEditingExpense(null);
         }}
-        onExpenseAdded={loadExpenses}
+        onExpenseAdded={handleExpenseSaved}
         expense={editingExpense}
       />
     </div>

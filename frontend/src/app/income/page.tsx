@@ -6,14 +6,15 @@ import { useRouter } from "next/navigation";
 import AddIncomeModal from "@/app/income/AddIncomeModal";
 import { apiRequest } from "@/app/lib/api";
 import Sidebar from "@/components/Sidebar/Sidebar";
-
-type Income = {
-  id: string;
-  amount: number | string;
-  source: string;
-  note: string | null;
-  income_date: string;
-};
+import type { Income } from "@/app/income/types";
+// type Income = {
+//   id: string;
+//   amount: number | string;
+//   source: string;
+//   payment_mode: "UPI" | "Cash";
+//   note: string | null;
+//   income_date: string;
+// };
 
 type IncomeDateRange = "all" | "this_month" | "last_6_months" | "last_year";
 
@@ -278,7 +279,7 @@ export default function IncomePage() {
 
               {!loading && !error && incomes.length > 0 && (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-[700px] text-left">
+                  <table className="w-full min-w-200 text-left">
                     <thead>
                       <tr className="border-b border-zinc-200 font-primary text-caption uppercase tracking-wide text-zinc-400">
                         <th className="px-6 py-4 font-medium">Source</th>
