@@ -4,7 +4,7 @@ import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 
-import axiosInstance from "@/app/lib/axios";
+import axiosInstance from "@/lib/axios/axios";
 
 type Expense = {
   id: string;

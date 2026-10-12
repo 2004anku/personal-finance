@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiRequest } from "@/app/lib/api";
+import { apiRequest } from "@/lib/Api/api";
 import Sidebar from "@/components/Sidebar/Sidebar";
 
 type User = {

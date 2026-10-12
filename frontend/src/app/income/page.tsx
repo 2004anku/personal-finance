@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 import AddIncomeModal from "@/app/income/AddIncomeModal";
-import { apiRequest } from "@/app/lib/api";
+import { apiRequest } from "@/lib/Api/api";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import type { Income } from "@/app/income/types";
 

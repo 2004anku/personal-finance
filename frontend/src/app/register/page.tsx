@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import { apiRequest } from "@/app/lib/api";
+import { apiRequest } from "@/lib/Api/api";
 
 export default function RegisterPage() {
   const router = useRouter();

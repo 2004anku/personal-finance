@@ -10,7 +10,7 @@ import {
   Wallet,
 } from "lucide-react";
 
-import { apiRequest } from "@/app/lib/api";
+import { apiRequest } from "@/lib/Api/api";
 
 type User = {
   id: string;

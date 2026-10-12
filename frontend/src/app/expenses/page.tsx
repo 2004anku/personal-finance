@@ -14,8 +14,8 @@ import {
   Trash2,
 } from "lucide-react";
 
-import axiosInstance from "@/app/lib/axios";
-import { queryKeys } from "@/app/lib/tanstack/query-keys";
+import axiosInstance from "@/lib/axios/axios";
+import { queryKeys } from "@/lib/tanstack/query-keys";
 import AddExpenseModal from "@/app/expenses/AddExpenseModal";
 import Sidebar from "@/components/Sidebar/Sidebar";
 

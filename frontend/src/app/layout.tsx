@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
-import Providers from "@/app/lib/tanstack/providers";
+import Providers from "@/lib/tanstack/providers";
 import { GlobalLoaderProvider } from "@/components/GlobalLoader/GlobalLoaderProvider";
 
 const inter = Inter({

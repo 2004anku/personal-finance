@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { apiRequest } from "@/app/lib/api";
+import { apiRequest } from "@/lib/Api/api";
 import type { Income, IncomePaymentMode } from "@/app/income/types";
 
 type AddIncomeModalProps = {
