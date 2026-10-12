@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { X } from "lucide-react";
 import { apiRequest } from "@/app/lib/api";
 import type { Income, IncomePaymentMode } from "@/app/income/types";
 
@@ -181,10 +181,10 @@ export default function AddIncomeModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex h-9 w-9 items-center justify-center rounded-lg font-primary text-body text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Close modal"
           >
-            ×
+            <X size={20} strokeWidth={1.8} aria-hidden="true" />
           </button>
         </div>
 

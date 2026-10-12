@@ -1,6 +1,9 @@
 "use client";
+
 import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
+
 import axiosInstance from "@/app/lib/axios";
 
 type Expense = {
@@ -196,16 +199,19 @@ export default function AddExpenseModal({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex h-9 w-9 items-center justify-center rounded-lg font-primary text-body text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
             aria-label="Close modal"
           >
-            ×
+            <X size={20} strokeWidth={1.8} aria-hidden="true" />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5 p-6">
           {error && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 font-primary text-body text-red-600">
+            <div
+              role="alert"
+              className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 font-primary text-body text-red-600"
+            >
               {error}
             </div>
           )}

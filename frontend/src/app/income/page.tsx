@@ -2,19 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import {
+  CalendarDays,
+  Filter,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+  Wallet,
+} from "lucide-react";
 
 import AddIncomeModal from "@/app/income/AddIncomeModal";
 import { apiRequest } from "@/app/lib/api";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import type { Income } from "@/app/income/types";
-// type Income = {
-//   id: string;
-//   amount: number | string;
-//   source: string;
-//   payment_mode: "UPI" | "Cash";
-//   note: string | null;
-//   income_date: string;
-// };
 
 type IncomeDateRange = "all" | "this_month" | "last_6_months" | "last_year";
 
@@ -22,22 +23,10 @@ const FILTER_OPTIONS: {
   value: IncomeDateRange;
   label: string;
 }[] = [
-  {
-    value: "all",
-    label: "All",
-  },
-  {
-    value: "this_month",
-    label: "This Month",
-  },
-  {
-    value: "last_6_months",
-    label: "Last 6 Months",
-  },
-  {
-    value: "last_year",
-    label: "Last 1 Year",
-  },
+  { value: "all", label: "All" },
+  { value: "this_month", label: "This Month" },
+  { value: "last_6_months", label: "Last 6 Months" },
+  { value: "last_year", label: "Last 1 Year" },
 ];
 
 function formatCurrency(value: number | string) {
@@ -107,7 +96,6 @@ export default function IncomePage() {
   function handleFilterChange(dateRange: IncomeDateRange) {
     setSelectedFilter(dateRange);
     setShowFilter(false);
-
     loadIncomes(dateRange);
   }
 
@@ -154,6 +142,8 @@ export default function IncomePage() {
 
   useEffect(() => {
     loadIncomes("all");
+    // Initial load only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -177,9 +167,10 @@ export default function IncomePage() {
               <button
                 type="button"
                 onClick={() => setShowAddIncome(true)}
-                className="rounded-lg bg-zinc-900 px-4 py-2.5 font-primary text-label font-medium text-white transition hover:bg-zinc-800"
+                className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 font-primary text-label font-medium text-white transition hover:bg-zinc-800"
               >
-                + Add Income
+                <Plus size={18} strokeWidth={1.8} aria-hidden="true" />
+                Add Income
               </button>
             </div>
           </header>
@@ -187,9 +178,18 @@ export default function IncomePage() {
           <div className="space-y-6 p-6 lg:p-8">
             <section className="rounded-xl border border-zinc-200 bg-white">
               <div className="border-b border-zinc-200 p-6">
-                <h3 className="font-heading text-section-title font-semibold text-zinc-900">
-                  All Income
-                </h3>
+                <div className="flex items-center gap-2">
+                  <Wallet
+                    size={20}
+                    strokeWidth={1.8}
+                    className="text-zinc-600"
+                    aria-hidden="true"
+                  />
+
+                  <h3 className="font-heading text-section-title font-semibold text-zinc-900">
+                    All Income
+                  </h3>
+                </div>
 
                 <p className="mt-1 font-primary text-label text-zinc-500">
                   Your complete income history.
@@ -199,8 +199,10 @@ export default function IncomePage() {
                   <button
                     type="button"
                     onClick={() => setShowFilter((current) => !current)}
-                    className="rounded-lg border border-zinc-200 bg-white px-4 py-2 font-primary text-label font-medium text-zinc-700 transition hover:bg-zinc-50"
+                    aria-expanded={showFilter}
+                    className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 font-primary text-label font-medium text-zinc-700 transition hover:bg-zinc-50"
                   >
+                    <Filter size={16} strokeWidth={1.8} aria-hidden="true" />
                     Filter
                   </button>
 
@@ -211,6 +213,7 @@ export default function IncomePage() {
                           key={option.value}
                           type="button"
                           onClick={() => handleFilterChange(option.value)}
+                          aria-pressed={selectedFilter === option.value}
                           className={`w-full rounded-md px-3 py-2 text-left font-primary text-label transition ${
                             selectedFilter === option.value
                               ? "bg-zinc-100 font-medium text-zinc-900"
@@ -238,7 +241,7 @@ export default function IncomePage() {
               )}
 
               {!loading && error && (
-                <div className="p-8 text-center">
+                <div className="p-8 text-center" role="alert">
                   <p className="font-primary text-label font-medium text-red-600">
                     Unable to load income
                   </p>
@@ -250,8 +253,9 @@ export default function IncomePage() {
                   <button
                     type="button"
                     onClick={() => loadIncomes()}
-                    className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
                   >
+                    <RefreshCw size={16} strokeWidth={1.8} aria-hidden="true" />
                     Try Again
                   </button>
                 </div>
@@ -259,6 +263,13 @@ export default function IncomePage() {
 
               {!loading && !error && incomes.length === 0 && (
                 <div className="p-8 text-center">
+                  <CalendarDays
+                    size={32}
+                    strokeWidth={1.5}
+                    className="mx-auto mb-3 text-zinc-400"
+                    aria-hidden="true"
+                  />
+
                   <p className="font-primary text-label font-medium text-zinc-700">
                     No income found for this period.
                   </p>
@@ -270,9 +281,10 @@ export default function IncomePage() {
                   <button
                     type="button"
                     onClick={() => setShowAddIncome(true)}
-                    className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
                   >
-                    + Add Income
+                    <Plus size={16} strokeWidth={1.8} aria-hidden="true" />
+                    Add Income
                   </button>
                 </div>
               )}
@@ -286,7 +298,16 @@ export default function IncomePage() {
 
                         <th className="px-6 py-4 font-medium">Note</th>
 
-                        <th className="px-6 py-4 font-medium">Date</th>
+                        <th className="px-6 py-4 font-medium">
+                          <span className="inline-flex items-center gap-1.5">
+                            <CalendarDays
+                              size={14}
+                              strokeWidth={1.8}
+                              aria-hidden="true"
+                            />
+                            Date
+                          </span>
+                        </th>
 
                         <th className="px-6 py-4 text-right font-medium">
                           Amount
@@ -325,8 +346,14 @@ export default function IncomePage() {
                               <button
                                 type="button"
                                 onClick={() => setEditingIncome(income)}
-                                className="rounded-md px-3 py-1.5 font-primary text-caption font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
+                                aria-label={`Edit income from ${income.source}`}
+                                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-primary text-caption font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
                               >
+                                <Pencil
+                                  size={14}
+                                  strokeWidth={1.8}
+                                  aria-hidden="true"
+                                />
                                 Edit
                               </button>
 
@@ -334,8 +361,14 @@ export default function IncomePage() {
                                 type="button"
                                 onClick={() => handleDeleteIncome(income.id)}
                                 disabled={deletingIncomeId === income.id}
-                                className="rounded-md px-3 py-1.5 font-primary text-caption font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label={`Delete income from ${income.source}`}
+                                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-primary text-caption font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                               >
+                                <Trash2
+                                  size={14}
+                                  strokeWidth={1.8}
+                                  aria-hidden="true"
+                                />
                                 {deletingIncomeId === income.id
                                   ? "Deleting..."
                                   : "Delete"}

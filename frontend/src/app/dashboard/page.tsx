@@ -8,9 +8,11 @@ import axios from "axios";
 import {
   ArrowDownRight,
   ArrowUpRight,
+  CalendarDays,
   CreditCard,
   Plus,
   Receipt,
+  RefreshCw,
   Wallet,
 } from "lucide-react";
 
@@ -205,7 +207,11 @@ export default function DashboardPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50">
         <div className="text-center">
-          <div className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900" />
+          <div
+            className="mx-auto mb-3 h-8 w-8 animate-spin rounded-full border-2 border-zinc-200 border-t-zinc-900"
+            role="status"
+            aria-label="Loading dashboard"
+          />
 
           <p className="text-sm text-zinc-500">Loading dashboard...</p>
         </div>
@@ -244,8 +250,9 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={handleRetry}
-            className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
+            className="mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
           >
+            <RefreshCw size={16} strokeWidth={1.8} aria-hidden="true" />
             Try Again
           </button>
         </div>
@@ -319,7 +326,7 @@ export default function DashboardPage() {
               onClick={() => setShowAddExpense(true)}
               className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800"
             >
-              <Plus className="h-4 w-4" />
+              <Plus size={16} strokeWidth={1.8} aria-hidden="true" />
               Add Expense
             </button>
           </div>
@@ -356,7 +363,7 @@ export default function DashboardPage() {
                     <div
                       className={`flex h-10 w-10 items-center justify-center rounded-lg ${card.iconWrapper}`}
                     >
-                      <Icon className="h-5 w-5" />
+                      <Icon size={20} strokeWidth={1.8} aria-hidden="true" />
                     </div>
                   </div>
                 </div>
@@ -381,7 +388,12 @@ export default function DashboardPage() {
               {categoryChartData.length === 0 ? (
                 <div className="flex h-64 items-center justify-center">
                   <div className="text-center">
-                    <Receipt className="mx-auto h-8 w-8 text-zinc-300" />
+                    <Receipt
+                      size={32}
+                      strokeWidth={1.6}
+                      className="mx-auto text-zinc-300"
+                      aria-hidden="true"
+                    />
 
                     <p className="mt-3 text-sm text-zinc-500">
                       No expenses recorded this month.
@@ -404,9 +416,9 @@ export default function DashboardPage() {
                           paddingAngle={2}
                           strokeWidth={0}
                         >
-                          {categoryChartData.map((_, index) => (
+                          {categoryChartData.map((item, index) => (
                             <Cell
-                              key={`cell-${index}`}
+                              key={item.name}
                               fill={chartColors[index % chartColors.length]}
                             />
                           ))}
@@ -434,6 +446,7 @@ export default function DashboardPage() {
                               backgroundColor:
                                 chartColors[index % chartColors.length],
                             }}
+                            aria-hidden="true"
                           />
 
                           <span className="truncate text-sm text-zinc-600">
@@ -466,7 +479,12 @@ export default function DashboardPage() {
               {dashboard.payment_modes.length === 0 ? (
                 <div className="flex h-64 items-center justify-center">
                   <div className="text-center">
-                    <CreditCard className="mx-auto h-8 w-8 text-zinc-300" />
+                    <CreditCard
+                      size={32}
+                      strokeWidth={1.6}
+                      className="mx-auto text-zinc-300"
+                      aria-hidden="true"
+                    />
 
                     <p className="mt-3 text-sm text-zinc-500">
                       No payment data available this month.
@@ -480,7 +498,12 @@ export default function DashboardPage() {
                       <div className="mb-2 flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100">
-                            <CreditCard className="h-4 w-4 text-zinc-600" />
+                            <CreditCard
+                              size={16}
+                              strokeWidth={1.8}
+                              className="text-zinc-600"
+                              aria-hidden="true"
+                            />
                           </div>
 
                           <span className="text-sm font-medium text-zinc-700">
@@ -539,7 +562,12 @@ export default function DashboardPage() {
 
             {recentExpenses.length === 0 ? (
               <div className="px-6 py-12 text-center">
-                <Receipt className="mx-auto h-8 w-8 text-zinc-300" />
+                <Receipt
+                  size={32}
+                  strokeWidth={1.6}
+                  className="mx-auto text-zinc-300"
+                  aria-hidden="true"
+                />
 
                 <p className="mt-3 text-sm text-zinc-500">
                   No expenses recorded this month.
@@ -563,7 +591,14 @@ export default function DashboardPage() {
                       </th>
 
                       <th className="px-6 py-3 text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                        Date
+                        <span className="inline-flex items-center gap-1.5">
+                          <CalendarDays
+                            size={14}
+                            strokeWidth={1.8}
+                            aria-hidden="true"
+                          />
+                          Date
+                        </span>
                       </th>
 
                       <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-400">
@@ -581,7 +616,12 @@ export default function DashboardPage() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-zinc-100">
-                              <Receipt className="h-4 w-4 text-zinc-600" />
+                              <Receipt
+                                size={16}
+                                strokeWidth={1.8}
+                                className="text-zinc-600"
+                                aria-hidden="true"
+                              />
                             </div>
 
                             <span className="text-sm font-medium text-zinc-900">

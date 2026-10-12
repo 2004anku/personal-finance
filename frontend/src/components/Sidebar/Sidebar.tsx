@@ -2,6 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  ChevronRight,
+  LayoutDashboard,
+  LogOut,
+  Receipt,
+  Wallet,
+} from "lucide-react";
+
 import { apiRequest } from "@/app/lib/api";
 
 type User = {
@@ -14,17 +22,17 @@ const navigationItems = [
   {
     name: "Dashboard",
     href: "/dashboard",
-    icon: "▦",
+    icon: LayoutDashboard,
   },
   {
     name: "Expenses",
     href: "/expenses",
-    icon: "▤",
+    icon: Receipt,
   },
   {
     name: "Income",
     href: "/income",
-    icon: "₹",
+    icon: Wallet,
   },
 ];
 
@@ -108,28 +116,35 @@ export default function Sidebar() {
               <p className="text-xs text-zinc-500">View Profile</p>
             </div>
 
-            {/* Arrow */}
-            <span className="text-lg text-zinc-400">›</span>
+            {/* Profile arrow */}
+            <ChevronRight
+              size={18}
+              strokeWidth={1.8}
+              className="shrink-0 text-zinc-400"
+              aria-hidden="true"
+            />
           </button>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-2 p-4">
+        <nav aria-label="Main navigation" className="flex-1 space-y-2 p-4">
           {navigationItems.map((item) => {
             const isActive = pathname === item.href;
+            const Icon = item.icon;
 
             return (
               <button
                 key={item.href}
                 type="button"
                 onClick={() => router.push(item.href)}
+                aria-current={isActive ? "page" : undefined}
                 className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition ${
                   isActive
                     ? "bg-zinc-900 text-white"
                     : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                 }`}
               >
-                <span>{item.icon}</span>
+                <Icon size={20} strokeWidth={1.8} aria-hidden="true" />
 
                 <span>{item.name}</span>
               </button>
@@ -142,9 +157,11 @@ export default function Sidebar() {
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
+            className="flex w-full items-center gap-3 rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
           >
-            Logout
+            <LogOut size={18} strokeWidth={1.8} aria-hidden="true" />
+
+            <span>Logout</span>
           </button>
         </div>
       </div>

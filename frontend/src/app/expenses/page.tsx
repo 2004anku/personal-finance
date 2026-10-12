@@ -1,8 +1,19 @@
 "use client";
+
 import { isAxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CalendarDays,
+  Filter,
+  Pencil,
+  Plus,
+  Receipt,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
+
 import axiosInstance from "@/app/lib/axios";
 import { queryKeys } from "@/app/lib/tanstack/query-keys";
 import AddExpenseModal from "@/app/expenses/AddExpenseModal";
@@ -210,9 +221,10 @@ export default function ExpensesPage() {
               <button
                 type="button"
                 onClick={() => setShowAddExpense(true)}
-                className="rounded-lg bg-zinc-900 px-4 py-2.5 font-primary text-label font-medium text-white transition hover:bg-zinc-800"
+                className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 font-primary text-label font-medium text-white transition hover:bg-zinc-800"
               >
-                + Add Expense
+                <Plus size={18} strokeWidth={2} aria-hidden="true" />
+                <span>Add Expense</span>
               </button>
             </div>
           </header>
@@ -220,20 +232,30 @@ export default function ExpensesPage() {
           <div className="space-y-6 p-6 lg:p-8">
             <section className="rounded-xl border border-zinc-200 bg-white">
               <div className="border-b border-zinc-200 p-6">
-                <h3 className="font-heading text-section-title font-semibold text-zinc-900">
-                  All Expenses
-                </h3>
-                <p className="mt-1 font-primary text-label text-zinc-500">
-                  Your complete expense history.
-                </p>
+                <div className="flex items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
+                    <Receipt size={20} strokeWidth={1.8} aria-hidden="true" />
+                  </div>
+
+                  <div>
+                    <h3 className="font-heading text-section-title font-semibold text-zinc-900">
+                      All Expenses
+                    </h3>
+                    <p className="mt-1 font-primary text-label text-zinc-500">
+                      Your complete expense history.
+                    </p>
+                  </div>
+                </div>
 
                 <div className="relative mt-4">
                   <button
                     type="button"
                     onClick={() => setShowFilter((current) => !current)}
-                    className="rounded-lg border border-zinc-200 bg-white px-4 py-2 font-primary text-label font-medium text-zinc-700 transition hover:bg-zinc-50"
+                    aria-expanded={showFilter}
+                    className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 font-primary text-label font-medium text-zinc-700 transition hover:bg-zinc-50"
                   >
-                    Filter
+                    <Filter size={16} strokeWidth={1.8} aria-hidden="true" />
+                    <span>Filter</span>
                   </button>
 
                   {showFilter && (
@@ -282,16 +304,24 @@ export default function ExpensesPage() {
                       setError("");
                       void refetch();
                     }}
-                    className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
                   >
-                    Try Again
+                    <RefreshCw size={16} strokeWidth={1.8} aria-hidden="true" />
+                    <span>Try Again</span>
                   </button>
                 </div>
               )}
 
               {!loading && !displayError && expenses.length === 0 && (
                 <div className="p-8 text-center">
-                  <p className="font-primary text-label font-medium text-zinc-700">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-500">
+                    <CalendarDays
+                      size={22}
+                      strokeWidth={1.8}
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <p className="mt-3 font-primary text-label font-medium text-zinc-700">
                     No expenses found for this period.
                   </p>
                   <p className="mt-1 font-primary text-label text-zinc-400">
@@ -300,9 +330,10 @@ export default function ExpensesPage() {
                   <button
                     type="button"
                     onClick={() => setShowAddExpense(true)}
-                    className="mt-4 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
                   >
-                    + Add Expense
+                    <Plus size={16} strokeWidth={2} aria-hidden="true" />
+                    <span>Add Expense</span>
                   </button>
                 </div>
               )}
@@ -351,21 +382,38 @@ export default function ExpensesPage() {
                               <button
                                 type="button"
                                 onClick={() => setEditingExpense(expense)}
-                                className="rounded-md px-3 py-1.5 font-primary text-caption font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
+                                aria-label={`Edit expense: ${expense.category}`}
+                                title="Edit expense"
+                                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-primary text-caption font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
                               >
-                                Edit
+                                <Pencil
+                                  size={14}
+                                  strokeWidth={1.8}
+                                  aria-hidden="true"
+                                />
+                                <span>Edit</span>
                               </button>
+
                               <button
                                 type="button"
                                 onClick={() =>
                                   void handleDeleteExpense(expense.id)
                                 }
                                 disabled={deletingExpenseId === expense.id}
-                                className="rounded-md px-3 py-1.5 font-primary text-caption font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                aria-label={`Delete expense: ${expense.category}`}
+                                title="Delete expense"
+                                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-primary text-caption font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
                               >
-                                {deletingExpenseId === expense.id
-                                  ? "Deleting..."
-                                  : "Delete"}
+                                <Trash2
+                                  size={14}
+                                  strokeWidth={1.8}
+                                  aria-hidden="true"
+                                />
+                                <span>
+                                  {deletingExpenseId === expense.id
+                                    ? "Deleting..."
+                                    : "Delete"}
+                                </span>
                               </button>
                             </div>
                           </td>
