@@ -82,45 +82,53 @@ export default function Sidebar() {
   const userInitial = user?.name?.charAt(0).toUpperCase() || "?";
 
   return (
-    <aside className="fixed hidden h-screen w-64 border-r border-zinc-200 bg-white lg:block">
+    <aside className="fixed hidden h-screen w-64 border-r border-zinc-200 bg-white transition-colors dark:border-zinc-800 dark:bg-zinc-950 lg:block">
       <div className="flex h-full flex-col">
         {/* Logo */}
-        <div className="flex h-20 items-center border-b border-zinc-200 px-6">
+        <div className="flex h-20 items-center border-b border-zinc-200 px-6 dark:border-zinc-800">
           <div>
-            <h1 className="text-xl font-bold text-zinc-900">Money Tracker</h1>
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-zinc-100">
+              Money Tracker
+            </h1>
 
-            <p className="text-xs text-zinc-500">Personal Finance</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Personal Finance
+            </p>
           </div>
         </div>
 
         {/* Profile */}
-        <div className="border-b border-zinc-200 p-4">
+        <div className="border-b border-zinc-200 p-4 dark:border-zinc-800">
           <button
             type="button"
             onClick={handleProfileClick}
-            className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition ${
-              pathname === "/profile" ? "bg-zinc-100" : "hover:bg-zinc-100"
+            className={`flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors ${
+              pathname === "/profile"
+                ? "bg-zinc-100 dark:bg-zinc-800"
+                : "hover:bg-zinc-100 dark:hover:bg-zinc-900"
             }`}
           >
             {/* Avatar */}
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-sm font-semibold text-white">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-900 text-sm font-semibold text-white dark:bg-zinc-100 dark:text-zinc-900">
               {userInitial}
             </div>
 
             {/* User */}
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-zinc-900">
+              <p className="truncate text-sm font-medium text-zinc-900 dark:text-zinc-100">
                 {user?.name || "Loading..."}
               </p>
 
-              <p className="text-xs text-zinc-500">View Profile</p>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                View Profile
+              </p>
             </div>
 
             {/* Profile arrow */}
             <ChevronRight
               size={18}
               strokeWidth={1.8}
-              className="shrink-0 text-zinc-400"
+              className="shrink-0 text-zinc-400 dark:text-zinc-500"
               aria-hidden="true"
             />
           </button>
@@ -138,10 +146,10 @@ export default function Sidebar() {
                 type="button"
                 onClick={() => router.push(item.href)}
                 aria-current={isActive ? "page" : undefined}
-                className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition ${
+                className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                   isActive
-                    ? "bg-zinc-900 text-white"
-                    : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                    ? "bg-green-700 text-white dark:bg-green-400 dark:text-green-950"
+                    : "text-zinc-600 hover:bg-green-50 hover:text-green-800 dark:text-zinc-300 dark:hover:bg-green-950 dark:hover:text-green-300"
                 }`}
               >
                 <Icon size={20} strokeWidth={1.8} aria-hidden="true" />
@@ -153,11 +161,11 @@ export default function Sidebar() {
         </nav>
 
         {/* Logout */}
-        <div className="border-t border-zinc-200 p-4">
+        <div className="border-t border-zinc-200 p-4 dark:border-zinc-800">
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
+            className="flex w-full items-center gap-3 rounded-lg border border-zinc-200 px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-900 dark:hover:text-zinc-100"
           >
             <LogOut size={18} strokeWidth={1.8} aria-hidden="true" />
 

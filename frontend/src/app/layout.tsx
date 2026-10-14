@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-
+import ThemeProvider from "@/components/Theme/ThemeProvider";
 import Providers from "@/lib/tanstack/providers";
 import { GlobalLoaderProvider } from "@/components/GlobalLoader/GlobalLoaderProvider";
 
@@ -17,11 +17,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${inter.variable} h-full antialiased`}
+    >
       <body className="min-h-full flex flex-col">
-        <GlobalLoaderProvider>
-          <Providers>{children}</Providers>
-        </GlobalLoaderProvider>
+        <ThemeProvider>
+          <GlobalLoaderProvider>
+            <Providers>{children}</Providers>
+          </GlobalLoaderProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

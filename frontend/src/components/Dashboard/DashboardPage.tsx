@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Plus } from "lucide-react";
-
+import ThemeToggle from "@/components/Theme/ThemeToggle";
 import AddExpenseModal from "@/app/expenses/AddExpenseModal";
 import axiosInstance from "@/lib/axios/axios";
 import { queryKeys } from "@/lib/tanstack/query-keys";
@@ -218,30 +218,34 @@ export default function DashboardPage() {
       <Sidebar />
 
       <main className="lg:ml-64">
-        <header className="border-b border-zinc-200 bg-white">
-          <div className="flex items-center justify-between px-6 py-5 lg:px-8">
+        <header className="border-b border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950">
+          <div className="flex items-center justify-between gap-4 px-6 py-5 lg:px-8">
             <div>
-              <p className="mb-1 text-xs font-medium uppercase tracking-wider text-zinc-400">
+              <p className="mb-1 text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
                 Personal Finance
               </p>
 
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900">
+              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
                 Dashboard
               </h1>
 
-              <p className="mt-1 text-sm text-zinc-500">
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                 Here’s an overview of your finances this month.
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowAddExpense(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800"
-            >
-              <Plus size={16} aria-hidden="true" />
-              Add Expense
-            </button>
+            <div className="flex shrink-0 items-center gap-3">
+              <ThemeToggle />
+
+              <button
+                type="button"
+                onClick={() => setShowAddExpense(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+              >
+                <Plus size={16} aria-hidden="true" />
+                <span>Add Expense</span>
+              </button>
+            </div>
           </div>
         </header>
 
