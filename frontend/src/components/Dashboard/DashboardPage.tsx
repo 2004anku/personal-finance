@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Plus } from "lucide-react";
+
 import ThemeToggle from "@/components/Theme/ThemeToggle";
 import AddExpenseModal from "@/app/expenses/AddExpenseModal";
 import axiosInstance from "@/lib/axios/axios";
@@ -165,7 +166,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50">
+      <div className="min-h-screen bg-background text-foreground">
         <DashboardStatus type="loading" />
       </div>
     );
@@ -179,8 +180,8 @@ export default function DashboardPage() {
       currentError.response?.status === 401
     ) {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-50">
-          <p className="text-sm text-zinc-500">
+        <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
+          <p className="text-sm text-text-secondary">
             Your session has expired. Redirecting to login...
           </p>
         </div>
@@ -188,7 +189,7 @@ export default function DashboardPage() {
     }
 
     return (
-      <div className="min-h-screen bg-zinc-50">
+      <div className="min-h-screen bg-background text-foreground">
         <DashboardStatus
           type="error"
           message={getErrorMessage(currentError)}
@@ -214,22 +215,22 @@ export default function DashboardPage() {
   }));
 
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-200">
       <Sidebar />
 
-      <main className="lg:ml-64">
-        <header className="border-b border-zinc-200 bg-white dark:border-zinc-700 dark:bg-zinc-950">
-          <div className="flex items-center justify-between gap-4 px-6 py-5 lg:px-8">
+      <main className="min-w-0 lg:ml-64">
+        <header className="border-b border-border bg-surface">
+          <div className="flex flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-6 lg:px-8">
             <div>
-              <p className="mb-1 text-xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+              <p className="mb-1 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700 dark:text-emerald-400">
                 Personal Finance
               </p>
 
-              <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+              <h1 className="text-2xl font-bold tracking-tight text-text-primary">
                 Dashboard
               </h1>
 
-              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              <p className="mt-1 text-sm text-text-secondary">
                 Here’s an overview of your finances this month.
               </p>
             </div>
@@ -240,7 +241,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setShowAddExpense(true)}
-                className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-2 focus:ring-offset-background"
               >
                 <Plus size={16} aria-hidden="true" />
                 <span>Add Expense</span>
@@ -249,14 +250,17 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <div className="space-y-6 p-6 lg:p-8">
+        <div className="space-y-6 p-5 sm:p-6 lg:p-8">
           <SummaryCards
             totalIncome={income}
             totalExpenses={expenses}
             balance={balance}
           />
 
-          <section className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <section
+            aria-label="Expense analytics"
+            className="grid min-w-0 grid-cols-1 gap-5 xl:grid-cols-2"
+          >
             <CategoryChart data={categoryData} />
             <PaymentMethods data={paymentData} />
           </section>

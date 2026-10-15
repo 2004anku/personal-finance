@@ -42,24 +42,29 @@ export default function RecentExpenses({ expenses }: RecentExpensesProps) {
     .slice(0, 5);
 
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
-      <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-5">
+    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm transition-colors dark:border-zinc-700/80 dark:bg-zinc-900">
+      <div className="flex items-center justify-between border-b border-zinc-200 px-6 py-5 dark:border-zinc-700/80">
         <div>
-          <h2 className="text-lg font-semibold text-zinc-900">
+          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
             Recent Expenses
           </h2>
-          <p className="mt-1 text-sm text-zinc-500">Your latest transactions</p>
+
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            Your latest transactions
+          </p>
         </div>
       </div>
 
       {recentExpenses.length === 0 ? (
         <div className="flex min-h-40 items-center justify-center px-6">
-          <p className="text-sm text-zinc-500">No recent expenses found.</p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            No recent expenses found.
+          </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full  text-left text-sm">
-            <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-green-50/70 text-xs uppercase tracking-wide text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>
                 <th className="px-6 py-3 font-medium">Category</th>
                 <th className="px-6 py-3 font-medium">Note</th>
@@ -69,7 +74,7 @@ export default function RecentExpenses({ expenses }: RecentExpensesProps) {
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {recentExpenses.map((expense, index) => (
                 <tr
                   key={
@@ -77,27 +82,27 @@ export default function RecentExpenses({ expenses }: RecentExpensesProps) {
                     expense._id ??
                     `${expense.expense_date}-${index}`
                   }
-                  className="transition-colors hover:bg-zinc-50"
+                  className="transition-colors hover:bg-green-50/50 dark:hover:bg-zinc-800/70"
                 >
                   <td className="whitespace-nowrap px-6 py-4">
-                    <span className="inline-flex rounded-md bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700">
+                    <span className="inline-flex rounded-md bg-green-50 px-2.5 py-1 text-xs font-medium text-green-800 dark:bg-green-950/60 dark:text-green-300">
                       {expense.category || "Uncategorized"}
                     </span>
                   </td>
 
-                  <td className="max-w-48 truncate px-6 py-4 text-zinc-600">
+                  <td className="max-w-48 truncate px-6 py-4 text-zinc-600 dark:text-zinc-300">
                     {expense.description || expense.title || "—"}
                   </td>
 
-                  <td className="whitespace-nowrap px-6 py-4 text-zinc-600">
+                  <td className="whitespace-nowrap px-6 py-4 text-zinc-600 dark:text-zinc-300">
                     {expense.payment_method || "—"}
                   </td>
 
-                  <td className="whitespace-nowrap px-6 py-4 text-zinc-500">
+                  <td className="whitespace-nowrap px-6 py-4 text-zinc-500 dark:text-zinc-400">
                     {formatDate(expense.expense_date)}
                   </td>
 
-                  <td className="whitespace-nowrap px-6 py-4 text-right font-semibold text-zinc-900">
+                  <td className="whitespace-nowrap px-6 py-4 text-right font-semibold text-zinc-900 dark:text-zinc-100">
                     {formatCurrency(Number(expense.amount) || 0)}
                   </td>
                 </tr>

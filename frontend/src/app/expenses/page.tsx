@@ -38,7 +38,9 @@ const FILTER_OPTIONS: { value: ExpenseDateRange; label: string }[] = [
 ];
 
 function formatCurrency(value: number | string) {
-  return `₹${Number(value).toLocaleString("en-IN")}`;
+  return `₹${Number(value).toLocaleString("en-IN", {
+    maximumFractionDigits: 2,
+  })}`;
 }
 
 function formatDate(date: string) {
@@ -86,11 +88,7 @@ export default function ExpensesPage() {
 
       const response = await axiosInstance.get<Expense[]>("/expenses", {
         params:
-          selectedFilter === "all"
-            ? undefined
-            : {
-                date_range: selectedFilter,
-              },
+          selectedFilter === "all" ? undefined : { date_range: selectedFilter },
       });
 
       return [...response.data].sort(
@@ -165,7 +163,7 @@ export default function ExpensesPage() {
     setError("");
   }
 
-  async function handleDeleteExpense(expenseId: string) {
+  function handleDeleteExpense(expenseId: string) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this expense?",
     );
@@ -194,97 +192,98 @@ export default function ExpensesPage() {
         : "Unable to load expenses."
       : "");
 
-  useEffect(() => {
-    if (isError && isAuthenticationError(queryError)) {
-      localStorage.removeItem("access_token");
-      router.replace("/login");
-    }
-  }, [isError, queryError, router]);
-
   return (
-    <div className="min-h-screen bg-zinc-50 text-zinc-900">
+    <div className="min-h-screen bg-green-50/60 text-zinc-900 transition-colors dark:bg-zinc-950 dark:text-zinc-100">
       <div className="flex min-h-screen">
         <Sidebar />
 
-        <main className="flex-1 lg:ml-64">
-          <header className="border-b border-zinc-200 bg-white">
-            <div className="flex h-20 items-center justify-between px-6 lg:px-8">
+        <main className="min-w-0 flex-1 lg:ml-64">
+          <header className="sticky top-0 z-10 border-b border-green-100 bg-white/95 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95">
+            <div className="flex min-h-20 items-center justify-between gap-4 px-5 py-4 sm:px-6 lg:px-8">
               <div>
-                <h2 className="font-heading text-page-title font-bold text-zinc-900">
+                <h2 className="font-heading text-page-title font-bold text-zinc-900 dark:text-zinc-100">
                   Expenses
                 </h2>
-                <p className="font-primary text-label text-zinc-500">
-                  Manage all your expenses.
+                <p className="mt-1 font-primary text-label text-zinc-500 dark:text-zinc-400">
+                  Manage and track all your expenses.
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => setShowAddExpense(true)}
-                className="inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 font-primary text-label font-medium text-white transition hover:bg-zinc-800"
+                className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-green-700 px-3 py-2.5 font-primary text-label font-medium text-white transition hover:bg-green-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 focus-visible:ring-offset-2 dark:bg-green-500 dark:text-green-950 dark:hover:bg-green-400 dark:focus-visible:ring-offset-zinc-900"
               >
                 <Plus size={18} strokeWidth={2} aria-hidden="true" />
-                <span>Add Expense</span>
+                <span className="hidden sm:inline">Add Expense</span>
+                <span className="sm:hidden">Add</span>
               </button>
             </div>
           </header>
 
-          <div className="space-y-6 p-6 lg:p-8">
-            <section className="rounded-xl border border-zinc-200 bg-white">
-              <div className="border-b border-zinc-200 p-6">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-zinc-100 text-zinc-700">
-                    <Receipt size={20} strokeWidth={1.8} aria-hidden="true" />
-                  </div>
-
-                  <div>
-                    <h3 className="font-heading text-section-title font-semibold text-zinc-900">
-                      All Expenses
-                    </h3>
-                    <p className="mt-1 font-primary text-label text-zinc-500">
-                      Your complete expense history.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="relative mt-4">
-                  <button
-                    type="button"
-                    onClick={() => setShowFilter((current) => !current)}
-                    aria-expanded={showFilter}
-                    className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 font-primary text-label font-medium text-zinc-700 transition hover:bg-zinc-50"
-                  >
-                    <Filter size={16} strokeWidth={1.8} aria-hidden="true" />
-                    <span>Filter</span>
-                  </button>
-
-                  {showFilter && (
-                    <div className="absolute left-0 top-full z-20 mt-2 w-52 rounded-lg border border-zinc-200 bg-white p-1 shadow-lg">
-                      {FILTER_OPTIONS.map((option) => (
-                        <button
-                          key={option.value}
-                          type="button"
-                          onClick={() => handleFilterChange(option.value)}
-                          className={`w-full rounded-md px-3 py-2 text-left font-primary text-label transition ${
-                            selectedFilter === option.value
-                              ? "bg-zinc-100 font-medium text-zinc-900"
-                              : "text-zinc-700 hover:bg-zinc-50"
-                          }`}
-                        >
-                          {option.label}
-                        </button>
-                      ))}
+          <div className="space-y-6 p-5 sm:p-6 lg:p-8">
+            <section className="overflow-visible rounded-xl border border-green-100 bg-white shadow-sm transition-colors dark:border-zinc-800 dark:bg-zinc-900">
+              <div className="border-b border-zinc-100 p-5 sm:p-6 dark:border-zinc-800">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-800 dark:bg-green-500/15 dark:text-green-400">
+                      <Receipt size={21} strokeWidth={1.8} aria-hidden="true" />
                     </div>
-                  )}
+
+                    <div>
+                      <h3 className="font-heading text-section-title font-semibold text-zinc-900 dark:text-zinc-100">
+                        All Expenses
+                      </h3>
+                      <p className="mt-1 font-primary text-label text-zinc-500 dark:text-zinc-400">
+                        Your complete expense history.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowFilter((current) => !current)}
+                      aria-expanded={showFilter}
+                      className="inline-flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2.5 font-primary text-label font-medium text-zinc-700 transition hover:border-green-300 hover:bg-green-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-green-700 dark:hover:bg-zinc-800"
+                    >
+                      <Filter size={16} strokeWidth={1.8} aria-hidden="true" />
+                      <span>
+                        {FILTER_OPTIONS.find(
+                          (option) => option.value === selectedFilter,
+                        )?.label ?? "Filter"}
+                      </span>
+                    </button>
+
+                    {showFilter && (
+                      <div className="absolute right-0 top-full z-20 mt-2 w-52 rounded-xl border border-zinc-200 bg-white p-1.5 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+                        {FILTER_OPTIONS.map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => handleFilterChange(option.value)}
+                            className={`w-full rounded-lg px-3 py-2.5 text-left font-primary text-label transition ${
+                              selectedFilter === option.value
+                                ? "bg-green-50 font-medium text-green-800 dark:bg-green-500/15 dark:text-green-400"
+                                : "text-zinc-700 hover:bg-zinc-50 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
               {loading && (
-                <div className="p-8 text-center">
-                  <p className="font-primary text-label font-medium text-zinc-700">
+                <div className="p-10 text-center">
+                  <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-green-100 border-t-green-700 dark:border-zinc-700 dark:border-t-green-400" />
+                  <p className="mt-4 font-primary text-label font-medium text-zinc-700 dark:text-zinc-200">
                     Loading expenses...
                   </p>
-                  <p className="mt-1 font-primary text-caption text-zinc-400">
+                  <p className="mt-1 font-primary text-caption text-zinc-400 dark:text-zinc-500">
                     Fetching your expense history
                   </p>
                 </div>
@@ -292,10 +291,10 @@ export default function ExpensesPage() {
 
               {!loading && displayError && (
                 <div className="p-8 text-center">
-                  <p className="font-primary text-label font-medium text-red-600">
+                  <p className="font-primary text-label font-semibold text-red-600 dark:text-red-400">
                     Unable to load expenses
                   </p>
-                  <p className="mt-1 font-primary text-label text-zinc-500">
+                  <p className="mx-auto mt-1 max-w-xl wrap-break-word font-primary text-label text-zinc-500 dark:text-zinc-400">
                     {displayError}
                   </p>
                   <button
@@ -304,7 +303,7 @@ export default function ExpensesPage() {
                       setError("");
                       void refetch();
                     }}
-                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
+                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-green-700 px-4 py-2.5 font-primary text-label font-medium text-white transition hover:bg-green-800 dark:bg-green-500 dark:text-green-950 dark:hover:bg-green-400"
                   >
                     <RefreshCw size={16} strokeWidth={1.8} aria-hidden="true" />
                     <span>Try Again</span>
@@ -313,24 +312,24 @@ export default function ExpensesPage() {
               )}
 
               {!loading && !displayError && expenses.length === 0 && (
-                <div className="p-8 text-center">
-                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-zinc-100 text-zinc-500">
+                <div className="p-10 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-green-50 text-green-700 dark:bg-green-500/10 dark:text-green-400">
                     <CalendarDays
-                      size={22}
+                      size={24}
                       strokeWidth={1.8}
                       aria-hidden="true"
                     />
                   </div>
-                  <p className="mt-3 font-primary text-label font-medium text-zinc-700">
+                  <p className="mt-4 font-primary text-label font-semibold text-zinc-800 dark:text-zinc-200">
                     No expenses found for this period.
                   </p>
-                  <p className="mt-1 font-primary text-label text-zinc-400">
-                    Try selecting a different date range.
+                  <p className="mt-1 font-primary text-label text-zinc-500 dark:text-zinc-400">
+                    Try another date range or add your first expense.
                   </p>
                   <button
                     type="button"
                     onClick={() => setShowAddExpense(true)}
-                    className="mt-4 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2 font-primary text-label font-medium text-white hover:bg-zinc-800"
+                    className="mt-5 inline-flex items-center gap-2 rounded-lg bg-green-700 px-4 py-2.5 font-primary text-label font-medium text-white transition hover:bg-green-800 dark:bg-green-500 dark:text-green-950 dark:hover:bg-green-400"
                   >
                     <Plus size={16} strokeWidth={2} aria-hidden="true" />
                     <span>Add Expense</span>
@@ -340,51 +339,72 @@ export default function ExpensesPage() {
 
               {!loading && !displayError && expenses.length > 0 && (
                 <div className="overflow-x-auto">
-                  <table className="w-full min-w-200 text-left">
-                    <thead>
-                      <tr className="border-b border-zinc-200 font-primary text-caption uppercase tracking-wide text-zinc-400">
-                        <th className="px-6 py-4 font-medium">Category</th>
-                        <th className="px-6 py-4 font-medium">Note</th>
-                        <th className="px-6 py-4 font-medium">Payment</th>
-                        <th className="px-6 py-4 font-medium">Date</th>
-                        <th className="px-6 py-4 text-right font-medium">
+                  <table className="w-full min-w-190 text-left">
+                    <thead className="bg-green-50/70 dark:bg-zinc-800/80">
+                      <tr className="border-b border-zinc-200 font-primary text-caption uppercase tracking-wide text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+                        <th scope="col" className="px-6 py-4 font-semibold">
+                          Category
+                        </th>
+                        <th scope="col" className="px-6 py-4 font-semibold">
+                          Note
+                        </th>
+                        <th scope="col" className="px-6 py-4 font-semibold">
+                          Payment
+                        </th>
+                        <th scope="col" className="px-6 py-4 font-semibold">
+                          Date
+                        </th>
+                        <th
+                          scope="col"
+                          className="px-6 py-4 text-right font-semibold"
+                        >
                           Amount
                         </th>
-                        <th className="px-6 py-4 text-right font-medium">
+                        <th
+                          scope="col"
+                          className="px-6 py-4 text-right font-semibold"
+                        >
                           Actions
                         </th>
                       </tr>
                     </thead>
 
-                    <tbody>
+                    <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                       {expenses.map((expense) => (
                         <tr
                           key={expense.id}
-                          className="border-b border-zinc-100 last:border-0 hover:bg-zinc-50"
+                          className="transition-colors hover:bg-green-50/60 dark:hover:bg-zinc-800/60"
                         >
-                          <td className="px-6 py-4 font-primary text-label font-medium text-zinc-900">
-                            {expense.category}
+                          <td className="px-6 py-4">
+                            <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 font-primary text-label font-medium text-green-800 dark:bg-green-500/10 dark:text-green-400">
+                              {expense.category}
+                            </span>
                           </td>
-                          <td className="max-w-xs px-6 py-4 font-primary text-label text-zinc-600">
+
+                          <td className="max-w-xs truncate px-6 py-4 font-primary text-label text-zinc-600 dark:text-zinc-300">
                             {expense.note || "—"}
                           </td>
-                          <td className="px-6 py-4 font-primary text-label text-zinc-600">
+
+                          <td className="px-6 py-4 font-primary text-label text-zinc-600 dark:text-zinc-300">
                             {expense.payment_mode}
                           </td>
-                          <td className="px-6 py-4 font-primary text-label text-zinc-500">
+
+                          <td className="whitespace-nowrap px-6 py-4 font-primary text-label text-zinc-500 dark:text-zinc-400">
                             {formatDate(expense.expense_date)}
                           </td>
-                          <td className="px-6 py-4 text-right font-primary text-label font-semibold text-zinc-900">
+
+                          <td className="whitespace-nowrap px-6 py-4 text-right font-primary text-label font-semibold text-zinc-900 dark:text-zinc-100">
                             {formatCurrency(expense.amount)}
                           </td>
-                          <td className="px-6 py-4 text-right">
+
+                          <td className="whitespace-nowrap px-6 py-4 text-right">
                             <div className="flex justify-end gap-2">
                               <button
                                 type="button"
                                 onClick={() => setEditingExpense(expense)}
                                 aria-label={`Edit expense: ${expense.category}`}
                                 title="Edit expense"
-                                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-primary text-caption font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900"
+                                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 font-primary text-caption font-medium text-zinc-600 transition hover:bg-green-100 hover:text-green-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-green-600 dark:text-zinc-300 dark:hover:bg-green-500/15 dark:hover:text-green-400"
                               >
                                 <Pencil
                                   size={14}
@@ -396,13 +416,11 @@ export default function ExpensesPage() {
 
                               <button
                                 type="button"
-                                onClick={() =>
-                                  void handleDeleteExpense(expense.id)
-                                }
+                                onClick={() => handleDeleteExpense(expense.id)}
                                 disabled={deletingExpenseId === expense.id}
                                 aria-label={`Delete expense: ${expense.category}`}
                                 title="Delete expense"
-                                className="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 font-primary text-caption font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 font-primary text-caption font-medium text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-500/10"
                               >
                                 <Trash2
                                   size={14}

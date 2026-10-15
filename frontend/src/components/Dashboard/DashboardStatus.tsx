@@ -15,13 +15,14 @@ export default function DashboardStatus({
 }: DashboardStatusProps) {
   if (type === "loading") {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-zinc-50 px-4">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-background px-4 text-foreground transition-colors">
         <div
-          className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-900"
+          className="h-10 w-10 animate-spin rounded-full border-4 border-border border-t-primary"
           role="status"
           aria-label="Loading"
         />
-        <p className="mt-4 text-sm font-medium text-zinc-600">
+
+        <p className="mt-4 text-sm font-medium text-text-secondary">
           Loading dashboard...
         </p>
       </div>
@@ -30,16 +31,20 @@ export default function DashboardStatus({
 
   if (type === "error") {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-zinc-50 px-4 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-          <AlertCircle size={24} className="text-red-600" aria-hidden="true" />
+      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-background px-4 text-center text-foreground transition-colors">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/40">
+          <AlertCircle
+            size={24}
+            className="text-red-600 dark:text-red-400"
+            aria-hidden="true"
+          />
         </div>
 
-        <h2 className="mt-4 text-lg font-semibold text-zinc-900">
+        <h2 className="mt-4 text-lg font-semibold text-text-primary">
           Unable to load dashboard
         </h2>
 
-        <p className="mt-2 max-w-md text-sm text-zinc-500">
+        <p className="mt-2 max-w-md text-sm text-text-secondary">
           {message || "Something went wrong while loading your dashboard."}
         </p>
 
@@ -47,7 +52,7 @@ export default function DashboardStatus({
           <button
             type="button"
             onClick={onRetry}
-            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-zinc-400 focus:ring-offset-2"
+            className="mt-6 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-2 focus:ring-offset-background"
           >
             <RefreshCw size={16} aria-hidden="true" />
             Try again
@@ -58,8 +63,10 @@ export default function DashboardStatus({
   }
 
   return (
-    <div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-zinc-200 bg-white px-4 text-center">
-      <p className="text-sm text-zinc-500">{message || "No data available."}</p>
+    <div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-border bg-surface px-4 text-center">
+      <p className="text-sm text-text-secondary">
+        {message || "No data available."}
+      </p>
     </div>
   );
 }

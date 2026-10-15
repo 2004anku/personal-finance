@@ -19,8 +19,8 @@ export default function SummaryCards({
         amount={totalIncome}
         description="This month"
         icon={ArrowUpRight}
-        iconColor="text-emerald-600"
-        iconBackground="bg-emerald-50"
+        iconColor="text-emerald-700 dark:text-emerald-400"
+        iconBackground="bg-emerald-50 dark:bg-emerald-950/60"
       />
 
       <SummaryCard
@@ -28,8 +28,8 @@ export default function SummaryCards({
         amount={totalExpenses}
         description="This month"
         icon={ArrowDownRight}
-        iconColor="text-red-600"
-        iconBackground="bg-red-50"
+        iconColor="text-red-600 dark:text-red-400"
+        iconBackground="bg-red-50 dark:bg-red-950/60"
       />
 
       <SummaryCard
@@ -37,9 +37,21 @@ export default function SummaryCards({
         amount={balance}
         description="Income minus expenses"
         icon={Wallet}
-        iconColor={balance >= 0 ? "text-blue-600" : "text-red-600"}
-        iconBackground={balance >= 0 ? "bg-blue-50" : "bg-red-50"}
-        valueColor={balance >= 0 ? "text-zinc-900" : "text-red-600"}
+        iconColor={
+          balance >= 0
+            ? "text-blue-600 dark:text-blue-400"
+            : "text-red-600 dark:text-red-400"
+        }
+        iconBackground={
+          balance >= 0
+            ? "bg-blue-50 dark:bg-blue-950/60"
+            : "bg-red-50 dark:bg-red-950/60"
+        }
+        valueColor={
+          balance >= 0
+            ? "text-zinc-900 dark:text-zinc-100"
+            : "text-red-600 dark:text-red-400"
+        }
       />
     </section>
   );

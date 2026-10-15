@@ -8,12 +8,19 @@ export async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {},
 ): Promise<T> {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+
+  const headers = new Headers(options.headers);
+  headers.set("Content-Type", "application/json");
+
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options.headers,
-    },
+    headers,
   });
 
   const data = await response.json().catch(() => null);
@@ -26,5 +33,5 @@ export async function apiRequest<T>(
     throw new Error(data?.detail || "Something went wrong. Please try again.");
   }
 
-  return data;
+  return data as T;
 }
