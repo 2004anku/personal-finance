@@ -195,12 +195,20 @@ export default function IncomePage() {
         <Sidebar />
 
         <main className="min-w-0 flex-1 lg:ml-64">
-          <header className="sticky top-0 z-10 border-b border-green-100 bg-white/95 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95">
-            <div className="flex min-h-20 items-center justify-between gap-4 px-5 py-4 sm:px-6 lg:px-8">
+          <header className="sticky top-0 z-10 isolate overflow-hidden border-b border-green-100 bg-white/95 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95">
+            {/* Animated cash-flow background */}
+            <div
+              className="cash-flow-track absolute inset-0 z-0 pointer-events-none"
+              aria-hidden="true"
+            />
+
+            {/* Header content */}
+            <div className="relative z-10 flex min-h-28 items-center justify-between gap-4 px-5 py-4 sm:px-6 lg:px-8">
               <div>
                 <h2 className="font-heading text-page-title font-bold text-zinc-900 dark:text-zinc-100">
                   Income
                 </h2>
+
                 <p className="mt-1 font-primary text-label text-zinc-500 dark:text-zinc-400">
                   Manage and track all your income.
                 </p>

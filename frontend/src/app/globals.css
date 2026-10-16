@@ -174,3 +174,49 @@ body {
   background: #166534;
   color: #f0fdf4;
 }
+
+/* Income header cash-flow animation */
+@keyframes cash-flow-slide {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Cash-flow animation across the full Income header */
+.cash-flow-track {
+  position: absolute;
+  inset: 0;
+  width: 200%;
+  height: 100%;
+
+  background-image: url("/images/cash-flow-overlay.png");
+  background-repeat: repeat-x;
+  background-size: 50% 100%;
+  background-position: center;
+
+  opacity: 0.3;
+  pointer-events: none;
+  animation: cash-flow-slide 18s linear infinite;
+  will-change: transform;
+}
+
+@keyframes cash-flow-slide {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Respect accessibility preferences */
+@media (prefers-reduced-motion: reduce) {
+  .cash-flow-track {
+    animation: none;
+  }
+}
