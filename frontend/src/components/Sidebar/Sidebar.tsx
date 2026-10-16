@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 import { apiRequest } from "@/lib/Api/api";
-
+import ThemeToggle from "@/components/Theme/ThemeToggle";
 type User = {
   id: string;
   name: string;
@@ -238,22 +238,23 @@ export default function Sidebar() {
         </nav>
 
         {/* Logout */}
-        <div className="shrink-0 border-t border-zinc-100 p-4 dark:border-zinc-800">
-          <button
-            type="button"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            className="group flex w-full items-center gap-3 rounded-xl border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-600 transition-all duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-wait disabled:opacity-60 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-red-900 dark:hover:bg-red-950/30 dark:hover:text-red-400"
-          >
-            {loggingOut ? (
-              <LoaderCircle size={19} className="animate-spin" />
-            ) : (
-              <LogOut size={19} strokeWidth={1.8} />
-            )}
-            <span>{loggingOut ? "Signing out..." : "Logout"}</span>
-          </button>
 
-          <p className="mt-3 text-center text-[10px] text-zinc-400 dark:text-zinc-600">
+        <div className="shrink-0 border-t border-zinc-100 p-4 dark:border-zinc-800">
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              disabled={loggingOut}
+              className="group flex flex-1 items-center gap-3 rounded-xl border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-600 transition-all duration-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:cursor-wait disabled:opacity-60 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-red-900 dark:hover:bg-red-950/30 dark:hover:text-red-400"
+            >
+              <LogOut size={18} />
+              <span>Logout</span>
+            </button>
+          </div>
+
+          <p className="mt-3 text-center text-xs text-zinc-500">
             Money Tracker · Personal Finance
           </p>
         </div>

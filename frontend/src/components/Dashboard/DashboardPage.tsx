@@ -6,7 +6,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { Plus } from "lucide-react";
 
-import ThemeToggle from "@/components/Theme/ThemeToggle";
 import AddExpenseModal from "@/app/expenses/AddExpenseModal";
 import axiosInstance from "@/lib/axios/axios";
 import { queryKeys } from "@/lib/tanstack/query-keys";
@@ -15,7 +14,7 @@ import Sidebar from "@/components/Sidebar/Sidebar";
 import SummaryCards from "./SummaryCards";
 import CategoryChart from "./CategoryChart";
 import PaymentMethods from "./PaymentMethods";
-import RecentExpenses from "./RecentExpenses";
+import RecentTransactions from "./RecentExpenses";
 import DashboardStatus from "./DashboardStatus";
 
 type DashboardResponse = {
@@ -44,7 +43,14 @@ type Expense = {
   payment_mode: string;
   expense_date: string;
 };
-
+type Income = {
+  id: string;
+  amount: number | string;
+  source: string;
+  payment_mode: string;
+  note: string | null;
+  income_date: string;
+};
 function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const detail = error.response?.data?.detail;
@@ -124,7 +130,27 @@ export default function DashboardPage() {
     },
     enabled: authChecked,
   });
+  const {
+    data: recentIncomes = [],
+    isPending: incomesLoading,
+    isError: incomesIsError,
+    error: incomesError,
+    refetch: refetchIncomes,
+  } = useQuery({
+    queryKey: [...queryKeys.income.list, "dashboard-recent"],
+    queryFn: async () => {
+      const response = await axiosInstance.get<Income[]>("/incomes");
 
+      return [...response.data]
+        .sort(
+          (a, b) =>
+            new Date(b.income_date).getTime() -
+            new Date(a.income_date).getTime(),
+        )
+        .slice(0, 5);
+    },
+    enabled: authChecked,
+  });
   useEffect(() => {
     const authError = dashboardError ?? expensesError;
 
@@ -236,8 +262,6 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex shrink-0 items-center gap-3">
-              <ThemeToggle />
-
               <button
                 type="button"
                 onClick={() => setShowAddExpense(true)}
@@ -265,7 +289,7 @@ export default function DashboardPage() {
             <PaymentMethods data={paymentData} />
           </section>
 
-          <RecentExpenses
+          <RecentTransactions
             expenses={recentExpenses.map((expense) => ({
               id: expense.id,
               amount: Number(expense.amount),
@@ -273,6 +297,10 @@ export default function DashboardPage() {
               description: expense.note ?? undefined,
               expense_date: expense.expense_date,
               payment_method: expense.payment_mode,
+            }))}
+            incomes={recentIncomes.map((income) => ({
+              ...income,
+              amount: Number(income.amount),
             }))}
           />
         </div>
