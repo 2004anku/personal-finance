@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -10,7 +10,9 @@ import AddExpenseModal from "@/app/expenses/AddExpenseModal";
 import axiosInstance from "@/lib/axios/axios";
 import { queryKeys } from "@/lib/tanstack/query-keys";
 import Sidebar from "@/components/Sidebar/Sidebar";
-
+import IncomeExpenseChart, {
+  type IncomeExpensePoint,
+} from "./IncomeExpenseChart";
 import SummaryCards from "./SummaryCards";
 import CategoryChart from "./CategoryChart";
 import PaymentMethods from "./PaymentMethods";
@@ -43,6 +45,7 @@ type Expense = {
   payment_mode: string;
   expense_date: string;
 };
+
 type Income = {
   id: string;
   amount: number | string;
@@ -51,6 +54,7 @@ type Income = {
   note: string | null;
   income_date: string;
 };
+
 function getErrorMessage(error: unknown): string {
   if (axios.isAxiosError(error)) {
     const detail = error.response?.data?.detail;
@@ -71,6 +75,65 @@ function getErrorMessage(error: unknown): string {
   }
 
   return "Unable to load dashboard.";
+}
+
+function isUnauthorized(error: unknown): boolean {
+  return axios.isAxiosError(error) && error.response?.status === 401;
+}
+
+function getDateKey(date: string): string {
+  // Supports API dates such as YYYY-MM-DD without timezone shifts.
+  return date.slice(0, 10);
+}
+
+function getLast30DaysChartData(
+  expenses: Expense[],
+  incomes: Income[],
+): IncomeExpensePoint[] {
+  const dailyTotals = new Map<
+    string,
+    { date: string; income: number; expenses: number }
+  >();
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  for (let offset = 29; offset >= 0; offset--) {
+    const day = new Date(today);
+    day.setDate(today.getDate() - offset);
+
+    const dateKey = [
+      day.getFullYear(),
+      String(day.getMonth() + 1).padStart(2, "0"),
+      String(day.getDate()).padStart(2, "0"),
+    ].join("-");
+
+    dailyTotals.set(dateKey, {
+      date: dateKey,
+      income: 0,
+      expenses: 0,
+    });
+  }
+
+  for (const expense of expenses) {
+    const dateKey = getDateKey(expense.expense_date);
+    const day = dailyTotals.get(dateKey);
+
+    if (day) {
+      day.expenses += Number(expense.amount) || 0;
+    }
+  }
+
+  for (const income of incomes) {
+    const dateKey = getDateKey(income.income_date);
+    const day = dailyTotals.get(dateKey);
+
+    if (day) {
+      day.income += Number(income.amount) || 0;
+    }
+  }
+
+  return Array.from(dailyTotals.values());
 }
 
 export default function DashboardPage() {
@@ -130,6 +193,7 @@ export default function DashboardPage() {
     },
     enabled: authChecked,
   });
+
   const {
     data: recentIncomes = [],
     isPending: incomesLoading,
@@ -151,23 +215,65 @@ export default function DashboardPage() {
     },
     enabled: authChecked,
   });
+
+  const {
+    data: chartExpenses = [],
+    isPending: chartExpensesLoading,
+    isError: chartExpensesError,
+    error: chartExpensesQueryError,
+    refetch: refetchChartExpenses,
+  } = useQuery({
+    queryKey: [...queryKeys.expenses.list("all"), "income-expense-chart"],
+    queryFn: async () => {
+      const response = await axiosInstance.get<Expense[]>("/expenses");
+      return response.data;
+    },
+    enabled: authChecked,
+  });
+
+  const {
+    data: chartIncomes = [],
+    isPending: chartIncomesLoading,
+    isError: chartIncomesError,
+    error: chartIncomesQueryError,
+    refetch: refetchChartIncomes,
+  } = useQuery({
+    queryKey: [...queryKeys.income.list, "income-expense-chart"],
+    queryFn: async () => {
+      const response = await axiosInstance.get<Income[]>("/incomes");
+      return response.data;
+    },
+    enabled: authChecked,
+  });
+
+  const chartData = useMemo(
+    () => getLast30DaysChartData(chartExpenses, chartIncomes),
+    [chartExpenses, chartIncomes],
+  );
+
   useEffect(() => {
-    const authError = dashboardError ?? expensesError;
+    const errors = [
+      dashboardError,
+      expensesError,
+      incomesError,
+      chartExpensesQueryError,
+      chartIncomesQueryError,
+    ];
 
-    if (axios.isAxiosError(authError) && authError.response?.status === 401) {
+    if (errors.some(isUnauthorized)) {
       localStorage.removeItem("access_token");
-
-      queryClient.removeQueries({
-        queryKey: queryKeys.dashboard,
-      });
-
-      queryClient.removeQueries({
-        queryKey: queryKeys.expenses.all,
-      });
-
+      queryClient.clear();
       router.replace("/login");
     }
-  }, [dashboardError, expensesError, queryClient, router]);
+  }, [
+    dashboardError,
+    expensesError,
+    incomesError,
+    chartExpensesQueryError,
+    chartIncomesQueryError,
+    queryClient,
+    router,
+  ]);
 
   const loading = !authChecked || dashboardLoading || expensesLoading;
   const hasError = dashboardIsError || expensesIsError;
@@ -175,6 +281,9 @@ export default function DashboardPage() {
   const handleRetry = () => {
     void refetchDashboard();
     void refetchExpenses();
+    void refetchIncomes();
+    void refetchChartExpenses();
+    void refetchChartIncomes();
   };
 
   const handleExpenseAdded = async () => {
@@ -185,6 +294,9 @@ export default function DashboardPage() {
       queryClient.invalidateQueries({
         queryKey: queryKeys.expenses.all,
       }),
+      queryClient.invalidateQueries({
+        queryKey: [...queryKeys.expenses.list("all"), "income-expense-chart"],
+      }),
     ]);
 
     setShowAddExpense(false);
@@ -193,6 +305,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background text-foreground">
+        <Sidebar />
         <DashboardStatus type="loading" />
       </div>
     );
@@ -201,10 +314,7 @@ export default function DashboardPage() {
   if (hasError || !dashboard) {
     const currentError = dashboardError ?? expensesError;
 
-    if (
-      axios.isAxiosError(currentError) &&
-      currentError.response?.status === 401
-    ) {
+    if (isUnauthorized(currentError)) {
       return (
         <div className="flex min-h-screen items-center justify-center bg-background px-4 text-foreground">
           <p className="text-sm text-text-secondary">
@@ -216,6 +326,7 @@ export default function DashboardPage() {
 
     return (
       <div className="min-h-screen bg-background text-foreground">
+        <Sidebar />
         <DashboardStatus
           type="error"
           message={getErrorMessage(currentError)}
@@ -261,16 +372,14 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="flex shrink-0 items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setShowAddExpense(true)}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-2 focus:ring-offset-background"
-              >
-                <Plus size={16} aria-hidden="true" />
-                <span>Add Expense</span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => setShowAddExpense(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-2 focus:ring-offset-background"
+            >
+              <Plus size={16} aria-hidden="true" />
+              <span>Add Expense</span>
+            </button>
           </div>
         </header>
 
@@ -279,6 +388,16 @@ export default function DashboardPage() {
             totalIncome={income}
             totalExpenses={expenses}
             balance={balance}
+          />
+
+          <IncomeExpenseChart
+            data={chartData}
+            isLoading={chartExpensesLoading || chartIncomesLoading}
+            isError={chartExpensesError || chartIncomesError}
+            onRetry={() => {
+              void refetchChartExpenses();
+              void refetchChartIncomes();
+            }}
           />
 
           <section
