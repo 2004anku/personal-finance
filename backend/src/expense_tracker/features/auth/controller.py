@@ -1,16 +1,17 @@
+
+from datetime import datetime, timezone
+
 from fastapi import HTTPException, status
 
 from expense_tracker.core.security import create_access_token
 from expense_tracker.features.auth.schema import (
+    ChangePasswordRequest,
     LoginRequest,
     RegisterRequest,
     TokenResponse,
-     UpdateProfileRequest,
+    UpdateProfileRequest,
 )
-from expense_tracker.features.auth.service import (
-    hash_password,
-    verify_password,
-)
+from expense_tracker.features.auth.service import hash_password, verify_password
 from expense_tracker.features.user.model import User
 from expense_tracker.features.user.schema import UserResponse
 from expense_tracker.features.user.service import (
@@ -43,31 +44,20 @@ async def register_user(request: RegisterRequest) -> UserResponse:
 async def login_user(request: LoginRequest) -> TokenResponse:
     user = await get_user_by_email(request.email)
 
-    if not user:
+    if not user or not verify_password(request.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
         )
 
-    password_valid = verify_password(
-        request.password,
-        user.password_hash,
-    )
-
-    if not password_valid:
-        raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid email or password",
-        )
-
-    access_token = create_access_token(
-        subject=str(user.id),
-    )
+    access_token = create_access_token(subject=str(user.id))
 
     return TokenResponse(
         access_token=access_token,
         token_type="bearer",
     )
+
+
 async def update_current_user_profile(
     user: User,
     request: UpdateProfileRequest,
@@ -88,5 +78,24 @@ async def update_current_user_profile(
 
     return UserResponse.model_validate(updated_user)
 
+
 async def get_current_user_info(user: User) -> UserResponse:
     return UserResponse.model_validate(user)
+
+
+async def change_current_user_password(
+    user: User,
+    request: ChangePasswordRequest,
+) -> dict[str, str]:
+    if not verify_password(request.current_password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
+        )
+
+    user.password_hash = hash_password(request.new_password)
+    user.updated_at = datetime.now(timezone.utc)
+
+    await user.save()
+
+    return {"message": "Password changed successfully"}
