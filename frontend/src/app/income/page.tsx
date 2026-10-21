@@ -196,12 +196,6 @@ export default function IncomePage() {
 
         <main className="min-w-0 flex-1 lg:ml-64">
           <header className="sticky top-0 z-10 isolate overflow-hidden border-b border-green-100 bg-white/95 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/95">
-            {/* Animated cash-flow background */}
-            <div
-              className="cash-flow-track absolute inset-0 z-0 pointer-events-none"
-              aria-hidden="true"
-            />
-
             {/* Header content */}
             <div className="relative z-10 flex min-h-28 items-center justify-between gap-4 px-5 py-4 sm:px-6 lg:px-8">
               <div>
