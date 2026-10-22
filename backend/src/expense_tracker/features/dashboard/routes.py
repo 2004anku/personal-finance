@@ -1,11 +1,13 @@
+
 from fastapi import APIRouter, Depends
 
-from expense_tracker.dependencies import get_current_user
+from expense_tracker.dependencies import get_request_context
 from expense_tracker.features.dashboard.controller import (
     get_dashboard_controller,
 )
 from expense_tracker.features.dashboard.model import DashboardResponse
-from expense_tracker.features.user.model import User
+from expense_tracker.features.dashboard.service import get_demo_dashboard_data
+
 
 router = APIRouter(
     prefix="/dashboard",
@@ -18,9 +20,12 @@ router = APIRouter(
     response_model=DashboardResponse,
 )
 async def get_dashboard(
-    current_user: User = Depends(get_current_user),
+    context: dict = Depends(get_request_context),
 ) -> DashboardResponse:
-    return await get_dashboard_controller(
-        user_id=current_user.id,
-    )
+    if context["type"] == "demo":
+        data = get_demo_dashboard_data(context["session"])
+        return DashboardResponse.model_validate(data)
 
+    return await get_dashboard_controller(
+        user_id=context["user"].id,
+    )
