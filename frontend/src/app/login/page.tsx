@@ -56,6 +56,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -82,6 +83,29 @@ export default function LoginPage() {
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleDemo() {
+    setError("");
+
+    try {
+      setDemoLoading(true);
+
+      const data = await apiRequest<LoginResponse>("/demo/start", {
+        method: "POST",
+      });
+
+      localStorage.setItem("access_token", data.access_token);
+      router.push("/dashboard");
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Unable to start the demo. Please try again.",
+      );
+    } finally {
+      setDemoLoading(false);
     }
   }
 
@@ -157,7 +181,7 @@ export default function LoginPage() {
                 </span>
               </div>
 
-              <div className="mt-6 rounded-2xl border border-white/[0.07] bg-linear-to-br from-emerald-400/9to-transparent p-5">
+              <div className="mt-6 rounded-2xl border border-white/[0.07] bg-linear-to-br from-emerald-400/9 to-transparent p-5">
                 <p className="text-sm text-zinc-400">Track every rupee</p>
                 <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
                   <p className="text-3xl font-bold tracking-tight sm:text-4xl">
@@ -316,7 +340,7 @@ export default function LoginPage() {
                       value={email}
                       onChange={(event) => setEmail(event.target.value)}
                       required
-                      disabled={loading}
+                      disabled={loading || demoLoading}
                       className="w-full rounded-xl border border-zinc-700/80 bg-zinc-950/70 py-3.5 pl-11 pr-4 text-sm text-white outline-none transition duration-200 placeholder:text-zinc-600 hover:border-zinc-600 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/10 disabled:opacity-60"
                     />
                   </div>
@@ -346,7 +370,7 @@ export default function LoginPage() {
                       value={password}
                       onChange={(event) => setPassword(event.target.value)}
                       required
-                      disabled={loading}
+                      disabled={loading || demoLoading}
                       className="w-full rounded-xl border border-zinc-700/80 bg-zinc-950/70 py-3.5 pl-11 pr-12 text-sm text-white outline-none transition duration-200 placeholder:text-zinc-600 hover:border-zinc-600 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-400/10 disabled:opacity-60"
                     />
 
@@ -357,7 +381,8 @@ export default function LoginPage() {
                         showPassword ? "Hide password" : "Show password"
                       }
                       aria-pressed={showPassword}
-                      className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-zinc-500 transition hover:bg-white/6 hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+                      disabled={loading || demoLoading}
+                      className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-zinc-500 transition hover:bg-white/6 hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:opacity-60"
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -375,7 +400,7 @@ export default function LoginPage() {
 
                 <button
                   type="submit"
-                  disabled={loading}
+                  disabled={loading || demoLoading}
                   className="group flex w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-emerald-400 to-green-400 px-4 py-3.5 text-sm font-bold text-zinc-950 shadow-lg shadow-emerald-500/10 transition duration-200 hover:-translate-y-0.5 hover:from-emerald-300 hover:to-green-300 hover:shadow-emerald-500/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? (
@@ -394,6 +419,35 @@ export default function LoginPage() {
                   )}
                 </button>
               </form>
+
+              {/* Demo access */}
+              <button
+                type="button"
+                onClick={handleDemo}
+                disabled={loading || demoLoading}
+                className="group mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-400/5 px-4 py-3.5 text-sm font-semibold text-emerald-300 transition duration-200 hover:-translate-y-0.5 hover:border-emerald-400/60 hover:bg-emerald-400/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {demoLoading ? (
+                  <>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-emerald-400/30 border-t-emerald-400" />
+                    Starting demo...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={17} />
+                    Try Demo
+                    <ArrowRight
+                      size={17}
+                      className="transition-transform group-hover:translate-x-1"
+                    />
+                  </>
+                )}
+              </button>
+
+              <p className="mt-2 text-center text-xs leading-5 text-zinc-500">
+                Explore the dashboard, income, and expenses without creating an
+                account. Demo data is temporary.
+              </p>
 
               <div className="my-7 flex items-center gap-4">
                 <div className="h-px flex-1 bg-white/10" />
