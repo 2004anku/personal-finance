@@ -23,11 +23,12 @@ import { apiRequest } from "@/lib/Api/api";
 import Sidebar from "@/components/Sidebar/Sidebar";
 
 type User = {
-  id: string;
+  id?: string;
   name: string;
   email: string;
-  created_at: string;
-  updated_at: string;
+  created_at?: string | null;
+  updated_at?: string | null;
+  is_demo?: boolean;
 };
 
 type PasswordFields = {
@@ -48,6 +49,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [isDemo, setIsDemo] = useState(false);
 
   const [editing, setEditing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -62,13 +64,15 @@ export default function ProfilePage() {
     new: false,
     confirm: false,
   });
+
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
-
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadProfile() {
       const token = localStorage.getItem("access_token");
 
@@ -84,19 +88,34 @@ export default function ProfilePage() {
           },
         });
 
+        if (cancelled) return;
+
         setUser(data);
         setName(data.name);
         setEmail(data.email);
+        setIsDemo(data.is_demo === true);
       } catch (error) {
+        if (cancelled) return;
+
         console.error("Failed to load profile:", error);
-        localStorage.removeItem("access_token");
-        router.replace("/login");
+
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Unable to load your profile. Please try again.",
+        );
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadProfile();
+
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   function handleCancel() {
@@ -111,6 +130,11 @@ export default function ProfilePage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isDemo) {
+      setError("Profile editing is unavailable in demo mode.");
+      return;
+    }
 
     const token = localStorage.getItem("access_token");
 
@@ -163,6 +187,7 @@ export default function ProfilePage() {
       ...previous,
       [field]: value,
     }));
+
     setPasswordError("");
     setPasswordSuccess("");
   }
@@ -181,6 +206,11 @@ export default function ProfilePage() {
 
   async function handlePasswordSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (isDemo) {
+      setPasswordError("Password changes are unavailable in demo mode.");
+      return;
+    }
 
     const token = localStorage.getItem("access_token");
 
@@ -244,7 +274,9 @@ export default function ProfilePage() {
       setChangingPassword(false);
     }
   }
+
   const maskedUserId = user?.id ? `•••••${user.id.slice(-5)}` : "—";
+
   const initials = (user?.name || "U")
     .trim()
     .split(/\s+/)
@@ -252,13 +284,15 @@ export default function ProfilePage() {
     .map((part) => part.charAt(0).toUpperCase())
     .join("");
 
-  const memberSince = user?.created_at
-    ? new Date(user.created_at).toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      })
-    : "Not available";
+  const memberSince = isDemo
+    ? "Demo account"
+    : user?.created_at
+      ? new Date(user.created_at).toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : "Not available";
 
   const labelClass =
     "mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300";
@@ -307,7 +341,7 @@ export default function ProfilePage() {
                 </p>
               </div>
 
-              {!editing && (
+              {!editing && !isDemo && user && (
                 <button
                   type="button"
                   onClick={() => {
@@ -323,6 +357,16 @@ export default function ProfilePage() {
               )}
             </div>
           </header>
+
+          {isDemo && (
+            <div
+              role="status"
+              className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
+            >
+              You are viewing a demo account. Profile editing and password
+              changes are disabled.
+            </div>
+          )}
 
           {success && (
             <div
@@ -367,12 +411,14 @@ export default function ProfilePage() {
                   {user?.name || "User"}
                 </h2>
                 <p className="mt-1 break-all text-sm text-zinc-500 dark:text-zinc-400">
-                  {user?.email}
+                  {user?.email || "—"}
                 </p>
 
                 <div className="mt-5 flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-3 text-sm text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
                   <ShieldCheck size={18} />
-                  <span className="font-medium">Personal account</span>
+                  <span className="font-medium">
+                    {isDemo ? "Demo account" : "Personal account"}
+                  </span>
                 </div>
 
                 <div className="mt-5 border-t border-zinc-100 pt-5 dark:border-zinc-800">
@@ -410,7 +456,7 @@ export default function ProfilePage() {
                 </div>
 
                 <div className="p-5 sm:p-7">
-                  {editing ? (
+                  {editing && !isDemo ? (
                     <form onSubmit={handleSubmit} className="space-y-6">
                       <div>
                         <label className={labelClass} htmlFor="userId">
@@ -535,247 +581,251 @@ export default function ProfilePage() {
                 </div>
               </section>
 
-              {/* Security and password */}
-              <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-                <div className="flex items-center gap-3 border-b border-zinc-200 px-5 py-5 sm:px-7 dark:border-zinc-800">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
-                    <LockKeyhole size={21} />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h2 className="font-semibold text-zinc-900 dark:text-white">
-                      Security & Password
-                    </h2>
-                    <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                      Keep your account secure by updating your password.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="p-5 sm:p-7">
-                  {!passwordFormOpen ? (
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="flex items-start gap-3">
-                        <KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-zinc-400" />
-                        <div>
-                          <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                            Change your password
-                          </p>
-                          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                            You will need to verify your current password.
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setPasswordFormOpen(true);
-                          setPasswordError("");
-                          setPasswordSuccess("");
-                        }}
-                        className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-emerald-200 px-5 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
-                      >
-                        <LockKeyhole size={16} />
-                        Change Password
-                      </button>
+              {!isDemo && (
+                <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+                  <div className="flex items-center gap-3 border-b border-zinc-200 px-5 py-5 sm:px-7 dark:border-zinc-800">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/50 dark:text-emerald-400">
+                      <LockKeyhole size={21} />
                     </div>
-                  ) : (
-                    <form onSubmit={handlePasswordSubmit} className="space-y-5">
-                      <div>
-                        <label
-                          className={labelClass}
-                          htmlFor="current_password"
-                        >
-                          Current Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            id="current_password"
-                            name="current_password"
-                            type={showPasswords.current ? "text" : "password"}
-                            autoComplete="current-password"
-                            value={passwords.current_password}
-                            onChange={(event) =>
-                              updatePasswordField(
-                                "current_password",
-                                event.target.value,
-                              )
-                            }
-                            required
-                            maxLength={128}
-                            disabled={changingPassword}
-                            placeholder="Enter current password"
-                            className={`${inputClass} pr-12`}
-                          />
-                          <button
-                            type="button"
-                            aria-label={
-                              showPasswords.current
-                                ? "Hide current password"
-                                : "Show current password"
-                            }
-                            onClick={() =>
-                              setShowPasswords((previous) => ({
-                                ...previous,
-                                current: !previous.current,
-                              }))
-                            }
-                            className="absolute inset-y-0 right-0 flex items-center px-4 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
-                          >
-                            {showPasswords.current ? (
-                              <EyeOff size={18} />
-                            ) : (
-                              <Eye size={18} />
-                            )}
-                          </button>
-                        </div>
-                      </div>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="font-semibold text-zinc-900 dark:text-white">
+                        Security & Password
+                      </h2>
+                      <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                        Keep your account secure by updating your password.
+                      </p>
+                    </div>
+                  </div>
 
-                      <div>
-                        <label className={labelClass} htmlFor="new_password">
-                          New Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            id="new_password"
-                            name="new_password"
-                            type={showPasswords.new ? "text" : "password"}
-                            autoComplete="new-password"
-                            value={passwords.new_password}
-                            onChange={(event) =>
-                              updatePasswordField(
-                                "new_password",
-                                event.target.value,
-                              )
-                            }
-                            required
-                            minLength={8}
-                            maxLength={128}
-                            disabled={changingPassword}
-                            placeholder="Enter new password (at least 8 characters)"
-                            className={`${inputClass} pr-12`}
-                          />
-                          <button
-                            type="button"
-                            aria-label={
-                              showPasswords.new
-                                ? "Hide new password"
-                                : "Show new password"
-                            }
-                            onClick={() =>
-                              setShowPasswords((previous) => ({
-                                ...previous,
-                                new: !previous.new,
-                              }))
-                            }
-                            className="absolute inset-y-0 right-0 flex items-center px-4 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
-                          >
-                            {showPasswords.new ? (
-                              <EyeOff size={18} />
-                            ) : (
-                              <Eye size={18} />
-                            )}
-                          </button>
+                  <div className="p-5 sm:p-7">
+                    {!passwordFormOpen ? (
+                      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex items-start gap-3">
+                          <KeyRound className="mt-0.5 h-5 w-5 shrink-0 text-zinc-400" />
+                          <div>
+                            <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                              Change your password
+                            </p>
+                            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                              You will need to verify your current password.
+                            </p>
+                          </div>
                         </div>
-                        <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                          Use at least 8 characters.
-                        </p>
-                      </div>
-
-                      <div>
-                        <label
-                          className={labelClass}
-                          htmlFor="confirm_password"
-                        >
-                          Confirm New Password
-                        </label>
-                        <div className="relative">
-                          <input
-                            id="confirm_password"
-                            name="confirm_password"
-                            type={showPasswords.confirm ? "text" : "password"}
-                            autoComplete="new-password"
-                            value={passwords.confirm_password}
-                            onChange={(event) =>
-                              updatePasswordField(
-                                "confirm_password",
-                                event.target.value,
-                              )
-                            }
-                            required
-                            maxLength={128}
-                            disabled={changingPassword}
-                            placeholder="Re-enter new password"
-                            className={`${inputClass} pr-12`}
-                          />
-                          <button
-                            type="button"
-                            aria-label={
-                              showPasswords.confirm
-                                ? "Hide confirmation password"
-                                : "Show confirmation password"
-                            }
-                            onClick={() =>
-                              setShowPasswords((previous) => ({
-                                ...previous,
-                                confirm: !previous.confirm,
-                              }))
-                            }
-                            className="absolute inset-y-0 right-0 flex items-center px-4 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
-                          >
-                            {showPasswords.confirm ? (
-                              <EyeOff size={18} />
-                            ) : (
-                              <Eye size={18} />
-                            )}
-                          </button>
-                        </div>
-                      </div>
-
-                      {passwordError && (
-                        <div
-                          role="alert"
-                          className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
-                        >
-                          <X className="mt-0.5 h-5 w-5 shrink-0" />
-                          <p>{passwordError}</p>
-                        </div>
-                      )}
-
-                      <div className="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-5 sm:flex-row sm:justify-end dark:border-zinc-800">
                         <button
                           type="button"
-                          onClick={cancelPasswordChange}
-                          disabled={changingPassword}
-                          className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                          onClick={() => {
+                            setPasswordFormOpen(true);
+                            setPasswordError("");
+                            setPasswordSuccess("");
+                          }}
+                          className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-emerald-200 px-5 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-50 dark:border-emerald-900 dark:text-emerald-400 dark:hover:bg-emerald-950/40"
                         >
-                          <ArrowLeft size={16} />
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={changingPassword}
-                          className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {changingPassword ? (
-                            <>
-                              <LoaderCircle
-                                size={16}
-                                className="animate-spin"
-                              />
-                              Updating...
-                            </>
-                          ) : (
-                            <>
-                              <Check size={16} />
-                              Update Password
-                            </>
-                          )}
+                          <LockKeyhole size={16} />
+                          Change Password
                         </button>
                       </div>
-                    </form>
-                  )}
-                </div>
-              </section>
+                    ) : (
+                      <form
+                        onSubmit={handlePasswordSubmit}
+                        className="space-y-5"
+                      >
+                        <div>
+                          <label
+                            className={labelClass}
+                            htmlFor="current_password"
+                          >
+                            Current Password
+                          </label>
+                          <div className="relative">
+                            <input
+                              id="current_password"
+                              name="current_password"
+                              type={showPasswords.current ? "text" : "password"}
+                              autoComplete="current-password"
+                              value={passwords.current_password}
+                              onChange={(event) =>
+                                updatePasswordField(
+                                  "current_password",
+                                  event.target.value,
+                                )
+                              }
+                              required
+                              maxLength={128}
+                              disabled={changingPassword}
+                              placeholder="Enter current password"
+                              className={`${inputClass} pr-12`}
+                            />
+                            <button
+                              type="button"
+                              aria-label={
+                                showPasswords.current
+                                  ? "Hide current password"
+                                  : "Show current password"
+                              }
+                              onClick={() =>
+                                setShowPasswords((previous) => ({
+                                  ...previous,
+                                  current: !previous.current,
+                                }))
+                              }
+                              className="absolute inset-y-0 right-0 flex items-center px-4 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                            >
+                              {showPasswords.current ? (
+                                <EyeOff size={18} />
+                              ) : (
+                                <Eye size={18} />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className={labelClass} htmlFor="new_password">
+                            New Password
+                          </label>
+                          <div className="relative">
+                            <input
+                              id="new_password"
+                              name="new_password"
+                              type={showPasswords.new ? "text" : "password"}
+                              autoComplete="new-password"
+                              value={passwords.new_password}
+                              onChange={(event) =>
+                                updatePasswordField(
+                                  "new_password",
+                                  event.target.value,
+                                )
+                              }
+                              required
+                              minLength={8}
+                              maxLength={128}
+                              disabled={changingPassword}
+                              placeholder="Enter new password (at least 8 characters)"
+                              className={`${inputClass} pr-12`}
+                            />
+                            <button
+                              type="button"
+                              aria-label={
+                                showPasswords.new
+                                  ? "Hide new password"
+                                  : "Show new password"
+                              }
+                              onClick={() =>
+                                setShowPasswords((previous) => ({
+                                  ...previous,
+                                  new: !previous.new,
+                                }))
+                              }
+                              className="absolute inset-y-0 right-0 flex items-center px-4 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                            >
+                              {showPasswords.new ? (
+                                <EyeOff size={18} />
+                              ) : (
+                                <Eye size={18} />
+                              )}
+                            </button>
+                          </div>
+                          <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+                            Use at least 8 characters.
+                          </p>
+                        </div>
+
+                        <div>
+                          <label
+                            className={labelClass}
+                            htmlFor="confirm_password"
+                          >
+                            Confirm New Password
+                          </label>
+                          <div className="relative">
+                            <input
+                              id="confirm_password"
+                              name="confirm_password"
+                              type={showPasswords.confirm ? "text" : "password"}
+                              autoComplete="new-password"
+                              value={passwords.confirm_password}
+                              onChange={(event) =>
+                                updatePasswordField(
+                                  "confirm_password",
+                                  event.target.value,
+                                )
+                              }
+                              required
+                              maxLength={128}
+                              disabled={changingPassword}
+                              placeholder="Re-enter new password"
+                              className={`${inputClass} pr-12`}
+                            />
+                            <button
+                              type="button"
+                              aria-label={
+                                showPasswords.confirm
+                                  ? "Hide confirmation password"
+                                  : "Show confirmation password"
+                              }
+                              onClick={() =>
+                                setShowPasswords((previous) => ({
+                                  ...previous,
+                                  confirm: !previous.confirm,
+                                }))
+                              }
+                              className="absolute inset-y-0 right-0 flex items-center px-4 text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200"
+                            >
+                              {showPasswords.confirm ? (
+                                <EyeOff size={18} />
+                              ) : (
+                                <Eye size={18} />
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        {passwordError && (
+                          <div
+                            role="alert"
+                            className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+                          >
+                            <X className="mt-0.5 h-5 w-5 shrink-0" />
+                            <p>{passwordError}</p>
+                          </div>
+                        )}
+
+                        <div className="flex flex-col-reverse gap-3 border-t border-zinc-200 pt-5 sm:flex-row sm:justify-end dark:border-zinc-800">
+                          <button
+                            type="button"
+                            onClick={cancelPasswordChange}
+                            disabled={changingPassword}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 px-5 py-3 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
+                          >
+                            <ArrowLeft size={16} />
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            disabled={changingPassword}
+                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {changingPassword ? (
+                              <>
+                                <LoaderCircle
+                                  size={16}
+                                  className="animate-spin"
+                                />
+                                Updating...
+                              </>
+                            ) : (
+                              <>
+                                <Check size={16} />
+                                Update Password
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </form>
+                    )}
+                  </div>
+                </section>
+              )}
             </div>
           </div>
 
