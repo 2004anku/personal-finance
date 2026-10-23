@@ -1,7 +1,12 @@
 
 from fastapi import APIRouter, Depends
 
-from expense_tracker.dependencies import get_current_user
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from expense_tracker.dependencies import (
+    get_current_user,
+    get_request_context,
+)
 from expense_tracker.features.auth.controller import (
     change_current_user_password,
     get_current_user_info,
@@ -33,11 +38,18 @@ async def login(request: LoginRequest):
     return await login_user(request)
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me")
 async def get_me(
-    current_user: User = Depends(get_current_user),
+    context: dict = Depends(get_request_context),
 ):
-    return await get_current_user_info(current_user)
+    if context["type"] == "demo":
+        return {
+            "name": "Demo User",
+            "email": "demo@example.com",
+            "is_demo": True,
+        }
+
+    return await get_current_user_info(context["user"])
 
 
 @router.put("/profile", response_model=UserResponse)
